@@ -1,15 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const [open, setOpen] = useState(false);
   const handleLogout = () => { logout(); nav('/'); };
   return (
     <header className="header">
       <div className="logo"><Link to="/">ThyroLab</Link></div>
-      <nav>
+      <button
+        className="menu-btn btn outline small"
+        aria-label="Toggle navigation"
+        aria-expanded={open ? 'true' : 'false'}
+        onClick={() => setOpen(o=>!o)}
+      >
+        Menu
+      </button>
+      <nav className={open ? 'open' : ''}>
         <Link to="/tests">Tests</Link>
         <Link to="/booking">Book</Link>
         <Link to="/my-bookings">My Bookings</Link>
