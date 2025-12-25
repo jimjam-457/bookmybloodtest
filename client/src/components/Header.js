@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
+  const { items } = useBooking();
   const handleLogout = () => { logout(); nav('/'); };
   return (
     <header className="header">
@@ -20,7 +22,20 @@ export default function Header() {
       </button>
       <nav className={open ? 'open' : ''}>
         <Link to="/tests">Tests</Link>
-        <Link to="/booking">Book</Link>
+        <button
+          className="btn outline small"
+          onClick={() => {
+            setOpen(false);
+            if (!user) {
+              const next = items && items.length > 0 ? '/booking' : '/tests';
+              return nav(`/login?next=${encodeURIComponent(next)}`);
+            }
+            if (items && items.length > 0) return nav('/booking');
+            return nav('/tests');
+          }}
+        >
+          Book
+        </button>
         <Link to="/my-bookings">My Bookings</Link>
         {user && user.role === 'admin' && <Link to="/admin">Admin</Link>}
         {user ? (

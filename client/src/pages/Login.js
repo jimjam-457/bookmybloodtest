@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 
 export default function Login() {
   const { login } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get('next') || '/';
   const [form, setForm] = useState({ email:'', password:'' });
   const [error, setError] = useState('');
   const handle = async () => {
     if (!form.email || form.password.length < 6) { setError('Invalid input'); return; }
     const res = await login(form.email, form.password);
-    if (res.ok) nav('/');
+    if (res.ok) nav(next);
     else setError(res.message);
   };
   return (

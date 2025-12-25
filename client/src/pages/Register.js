@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function Register() {
   const { register } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get('next') || '/';
   const [form, setForm] = useState({ name:'', email:'', password:'' });
   const [error, setError] = useState('');
   const handle = async () => {
     if (!form.name || !/\S+@\S+\.\S+/.test(form.email) || form.password.length < 6) { setError('Invalid input'); return; }
     const res = await register(form.name, form.email, form.password);
-    if (res.ok) nav('/');
+    if (res.ok) nav(next);
     else setError(res.message);
   };
   return (

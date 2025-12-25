@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import HomeBanners from '../components/HomeBanners';
 import { getBanners } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 
 export default function Home() {
   const [banners, setBanners] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { items } = useBooking();
+  const nav = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -29,7 +34,20 @@ export default function Home() {
           <p className="muted">Certified labs, quick reports, and convenient home sample collection. Schedule your test with confidence.</p>
           <div style={{marginTop:16}}>
             <Link to="/tests" className="btn">View Tests</Link>
-            <Link to="/booking" className="btn outline" style={{marginLeft:12}}>Book Blood Test</Link>
+            <button
+              className="btn outline"
+              style={{marginLeft:12}}
+              onClick={() => {
+                if (!user) {
+                  const next = items && items.length > 0 ? '/booking' : '/tests';
+                  return nav(`/login?next=${encodeURIComponent(next)}`);
+                }
+                if (items && items.length > 0) return nav('/booking');
+                return nav('/tests');
+              }}
+            >
+              Book Blood Test
+            </button>
           </div>
           <div style={{marginTop:20}} className="features-grid">
             <div className="card small">
