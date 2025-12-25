@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -14,6 +14,27 @@ import { useAuth } from './context/AuthContext';
 
 function App() {
   const { user } = useAuth();
+  const location = useLocation();
+  useEffect(() => {
+    const id = process.env.REACT_APP_GA_ID;
+    if (!id) return;
+    if (!window.dataLayer) window.dataLayer = [];
+    function gtag(){ window.dataLayer.push(arguments); }
+    if (!document.getElementById('ga-script')) {
+      const s = document.createElement('script');
+      s.id = 'ga-script';
+      s.async = true;
+      s.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+      document.head.appendChild(s);
+      gtag('js', new Date());
+      gtag('config', id);
+    }
+    gtag('event', 'page_view', {
+      page_path: location.pathname + location.search,
+      page_location: window.location.href,
+      page_title: document.title
+    });
+  }, [location]);
   return (
     <div className="app">
       <Header />
