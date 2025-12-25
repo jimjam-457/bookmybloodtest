@@ -65,17 +65,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="hero-right">
-          <div className="illustration card">
-            {/* Placeholder artwork area; admin will supply images later */}
-            <div style={{height:220, display:'flex', alignItems:'center', justifyContent:'center', color:'#0f172a', opacity:0.8}}>
-              <div>
-                <div style={{fontSize:48}}>🧪</div>
-                <div className="muted">Lab Illustration</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </section>
 
       <section style={{marginTop:20}}>
