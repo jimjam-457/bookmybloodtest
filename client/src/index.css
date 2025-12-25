@@ -403,7 +403,6 @@ input, select, textarea {
     text-align:center;
   }
 }
-}
 
 @media(max-width:480px){
   :root{
