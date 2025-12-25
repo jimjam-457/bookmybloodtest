@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import MyBookings from './pages/MyBookings';
 import Admin from './pages/Admin';
 import { useAuth } from './context/AuthContext';
+import api from './services/api';
 
 function App() {
   const { user } = useAuth();
@@ -34,6 +35,15 @@ function App() {
       page_location: window.location.href,
       page_title: document.title
     });
+    try {
+      api.post('/analytics', {
+        type: 'page_view',
+        path: location.pathname + location.search,
+        referrer: document.referrer,
+        ua: navigator.userAgent,
+        ts: Date.now()
+      });
+    } catch {}
   }, [location]);
   return (
     <div className="app">
