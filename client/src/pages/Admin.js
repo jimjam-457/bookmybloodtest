@@ -10,6 +10,7 @@ export default function Admin() {
   const [view, setView] = useState('bookings'); // 'bookings' | 'tests' | 'banners'
   const [banners, setBanners] = useState([]);
   const [bannerForm, setBannerForm] = useState({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
+  const [editingBannerId, setEditingBannerId] = useState(null);
   const [error, setError] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -76,10 +77,39 @@ export default function Admin() {
       const resp = await api.post('/banners', { ...bannerForm, testId: bannerForm.testId || null, packageSlug: bannerForm.packageSlug || null });
       console.log('Banner created response:', resp.data);
       setBannerForm({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
+      setEditingBannerId(null);
       fetchBanners();
     } catch(e) { 
       console.error('Banner creation error:', e.response?.data);
       alert('Failed to create banner: ' + (e.response?.data?.message || e.message)); 
+    }
+  };
+  const startEditBanner = (b) => {
+    setEditingBannerId(b.id);
+    setBannerForm({
+      title: b.title || '',
+      subtitle: b.subtitle || '',
+      imageUrl: b.imageUrl || '',
+      testId: b.testId || '',
+      packageSlug: b.packageSlug || '',
+      isActive: b.isActive !== undefined ? b.isActive : true
+    });
+  };
+  const saveBanner = async () => {
+    if (!editingBannerId) return createBanner();
+    try {
+      const resp = await api.put(`/banners/${editingBannerId}`, { 
+        ...bannerForm, 
+        testId: bannerForm.testId || null, 
+        packageSlug: bannerForm.packageSlug || null 
+      });
+      console.log('Banner updated response:', resp.data);
+      setBannerForm({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
+      setEditingBannerId(null);
+      fetchBanners();
+    } catch(e) {
+      console.error('Banner update error:', e.response?.data);
+      alert('Failed to update banner: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -155,7 +185,8 @@ export default function Admin() {
               <input placeholder="Package Slug (optional)" value={bannerForm.packageSlug} onChange={e=>setBannerForm({...bannerForm, packageSlug:e.target.value})} />
               <label><input type="checkbox" checked={bannerForm.isActive} onChange={e=>setBannerForm({...bannerForm, isActive:e.target.checked})} /> Active</label>
               <div style={{marginTop:8}}>
-                <button className="btn" onClick={createBanner}>Add Banner</button>
+                <button className="btn" onClick={saveBanner}>{editingBannerId ? 'Save Changes' : 'Add Banner'}</button>
+                {editingBannerId && <button className="btn outline" style={{marginLeft:8}} onClick={()=>{ setEditingBannerId(null); setBannerForm({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true }); }}>Cancel</button>}
               </div>
             </div>
           </div>
@@ -172,7 +203,7 @@ export default function Admin() {
                         <div className="muted small">Link: {b.testId ? `Test ${b.testId}` : (b.packageSlug || '—')}</div>
                       </div>
                       <div>
-                        <button className="btn outline" onClick={()=>alert('Edit UI not implemented here yet')}>Edit</button>
+                        <button className="btn outline" onClick={()=>startEditBanner(b)}>Edit</button>
                         <button className="btn pill danger" style={{marginLeft:8}} onClick={()=>deactivateBanner(b.id)}>Deactivate</button>
                       </div>
                     </div>

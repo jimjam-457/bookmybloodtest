@@ -62,4 +62,29 @@ router.delete('/:id', (req, res) => {
   res.json({ message: 'Banner deleted', id });
 });
 
+// PUT /api/banners/:id - update a banner
+router.put('/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const idx = banners.findIndex(b => b.id === id);
+  if (idx === -1) return res.status(404).json({ message: 'Banner not found' });
+  const { title, subtitle, imageUrl, testId, packageSlug, isActive } = req.body || {};
+  const updated = {
+    ...banners[idx],
+    ...(title !== undefined ? { title } : {}),
+    ...(subtitle !== undefined ? { subtitle } : {}),
+    ...(imageUrl !== undefined ? { imageUrl } : {}),
+    ...(testId !== undefined ? { testId } : {}),
+    ...(packageSlug !== undefined ? { packageSlug } : {}),
+    ...(isActive !== undefined ? { isActive } : {})
+  };
+  banners[idx] = updated;
+  const responseData = {
+    ...updated,
+    imageUrl: updated.imageUrl && updated.imageUrl.startsWith('/uploads')
+      ? `http://localhost:5000${updated.imageUrl}`
+      : updated.imageUrl
+  };
+  res.json(responseData);
+});
+
 module.exports = router;
