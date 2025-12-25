@@ -42,12 +42,16 @@ let bookings = [
 let nextTestId = tests.length + 1;
 let nextUserId = users.length + 1;
 let nextBookingId = bookings.length + 1;
+let payments = [];
+let nextPaymentId = 1;
 
 module.exports = {
   tests,
   users,
   bookings,
+  payments,
   getNextTestId: () => nextTestId++,
   getNextUserId: () => nextUserId++,
-  getNextBookingId: () => nextBookingId++
+  getNextBookingId: () => nextBookingId++,
+  getNextPaymentId: () => nextPaymentId++
 };

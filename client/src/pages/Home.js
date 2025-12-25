@@ -30,8 +30,8 @@ export default function Home() {
     <div className="container">
       <section className="hero home-hero">
         <div className="hero-left">
-          <h1>Book Reliable Blood Tests at Home or Lab</h1>
-          <p className="muted">Certified labs, quick reports, and convenient home sample collection. Schedule your test with confidence.</p>
+          <h1>Book Blood Test Online at Home or Lab</h1>
+          <p className="muted">Book blood test at home with convenient diagnostic lab booking. Certified labs and fast digital reports across India.</p>
           <div style={{marginTop:16}}>
             <Link to="/tests" className="btn">View Tests</Link>
             <button

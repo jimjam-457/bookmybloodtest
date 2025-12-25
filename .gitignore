@@ -1,37 +1,14 @@
-# Dependencies
 node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Production
-/build
-/dist
-
-# Misc
+build/
+dist/
+.cache/
 .DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Uploads (user content)
-server/uploads/*
-!server/uploads/.gitkeep
-
-# OS
 Thumbs.db
+*.log
+.env
+client/node_modules/
+client/build/
+blood-test-booking/client/node_modules/
+blood-test-booking/client/build/
+server/uploads/
+.vercel/

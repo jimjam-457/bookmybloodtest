@@ -13,14 +13,12 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', requireAuth, (req, res) => {
-  const { tests: testItems, patient, address, collectionType, datetime, paymentMethod } = req.body;
+  const { tests: testItems, patient, address, collectionType, datetime, paymentMethod, paymentId } = req.body;
   if (!testItems || !patient || !collectionType || !datetime || !address) return res.status(400).json({ message: 'Missing fields' });
 
   const id = getNextBookingId();
   const total = testItems.reduce((s,t)=>s+(t.price||0),0);
-  // set paymentStatus based on method: CARD or UPI -> PAID (mock), COD -> PENDING
   let paymentStatus = 'PENDING';
-  if (paymentMethod === 'CARD' || paymentMethod === 'UPI') paymentStatus = 'PAID';
   const booking = {
     id,
     userId: req.user.id,
@@ -37,8 +35,9 @@ router.post('/', requireAuth, (req, res) => {
     },
     collectionType,
     datetime,
-    paymentMethod: paymentMethod || 'CARD',
+    paymentMethod: paymentMethod || 'UPI',
     paymentStatus,
+    paymentId: paymentId || null,
     total,
     status: 'Pending'
   };

@@ -22,6 +22,9 @@ export default function HomeBanners({ banners = [] }) {
               <img 
                 src={b.imageUrl} 
                 alt={b.title}
+                loading="lazy"
+                width="640"
+                height="280"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 onError={(e) => console.log('Image load error:', b.imageUrl, e)}
               />

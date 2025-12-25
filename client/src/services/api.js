@@ -36,3 +36,11 @@ export async function getBanners() {
 }
 
 export default api;
+export async function initiatePayment(amount, note) {
+  const resp = await api.post('/payments/initiate', { amount, note });
+  return resp.data;
+}
+export async function confirmPayment({ paymentId, utr, proofUrl, bookingId }) {
+  const resp = await api.post('/payments/confirm', { paymentId, utr, proofUrl, bookingId });
+  return resp.data;
+}

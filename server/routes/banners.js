@@ -18,6 +18,7 @@ router.get('/', (req, res) => {
       ? `http://localhost:5000${b.imageUrl}` 
       : b.imageUrl
   }));
+  res.set('Cache-Control', 'public, max-age=300');
   return res.json(bannersWithFullUrls);
 });
 

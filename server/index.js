@@ -68,6 +68,11 @@ try {
     app.use('/api/analytics', analyticsRoutes);
   } catch (err) {
   }
+  try {
+    const paymentsRoutes = require('./routes/payments');
+    app.use('/api/payments', paymentsRoutes);
+  } catch (err) {
+  }
 } catch (err) {
   // If route files are not present yet, continue — root route prevents 404 for GET /
   // console.debug('Some API route files not found yet:', err.message);

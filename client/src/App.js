@@ -12,6 +12,10 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const Admin = lazy(() => import('./pages/Admin'));
+const BloodTests = lazy(() => import('./pages/BloodTests'));
+const HealthPackages = lazy(() => import('./pages/HealthPackages'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+const Contact = lazy(() => import('./pages/Contact'));
 
 function App() {
   const { user } = useAuth();
@@ -52,6 +56,10 @@ function App() {
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/blood-tests" element={<BloodTests />} />
+            <Route path="/health-packages" element={<HealthPackages />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/tests" element={<Tests />} />
             <Route path="/tests/:id" element={<TestDetails />} />
             <Route path="/booking" element={<Booking />} />
