@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || '/api',
 });
 
 export function setAuthToken(token) {
@@ -9,6 +9,16 @@ export function setAuthToken(token) {
   else delete api.defaults.headers.common['Authorization'];
 }
 
+export function getApiRoot() {
+  const url = api.defaults.baseURL || '';
+  if (url.startsWith('/')) return window.location.origin;
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return window.location.origin;
+  }
+}
 
 
 export async function getBanners() {

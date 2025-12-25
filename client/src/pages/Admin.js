@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import api from '../services/api';
+import api, { getApiRoot } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Admin() {
@@ -102,8 +102,8 @@ export default function Admin() {
       const resp = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Build full image URL
-      const imageUrl = `http://localhost:5000${resp.data.imageUrl}`;
+      // Build full image URL based on API root
+      const imageUrl = `${getApiRoot()}${resp.data.imageUrl}`;
       console.log('Image uploaded:', imageUrl);
       setBannerForm({ ...bannerForm, imageUrl });
       setError(null);
