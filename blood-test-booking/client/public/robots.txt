@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bookmybloodtest.vercel.app/sitemap.xml
