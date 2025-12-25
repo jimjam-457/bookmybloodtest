@@ -1,0 +1,13 @@
+{
+  "buildCommand": "cd blood-test-booking/client && npm run build",
+  "outputDirectory": "blood-test-booking/client/build",
+  "installCommand": "cd blood-test-booking/client && npm install",
+  "framework": "create-react-app",
+  "devCommand": "cd blood-test-booking/client && npm start",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
