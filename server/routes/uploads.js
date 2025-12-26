@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { query } = require('../db');
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -37,17 +38,22 @@ const upload = multer({
 });
 
 // POST /api/uploads - upload an image
-router.post('/', upload.single('image'), (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file provided' });
   }
   // Return the URL to access the uploaded image
   const imageUrl = `/uploads/${req.file.filename}`;
-  res.json({ 
+  const meta = { 
     message: 'Image uploaded successfully',
     imageUrl,
     filename: req.file.filename
-  });
+  };
+  try {
+    const userId = req.user?.id || null;
+    await query('INSERT INTO uploads (user_id, url, filename) VALUES ($1,$2,$3)', [userId, imageUrl, req.file.filename]);
+  } catch (err) {}
+  res.json(meta);
 });
 
 // DELETE /api/uploads/:filename - delete an uploaded image

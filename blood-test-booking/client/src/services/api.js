@@ -12,17 +12,8 @@ export function setAuthToken(token) {
 
 
 export async function getBanners() {
-  try {
-    const resp = await api.get('/banners');
-    if (resp && resp.data) return resp.data;
-  } catch (e) {
-    // ignore and fall through to mock
-  }
-  // Mock banners used by the Home page when backend doesn't provide banners
-  return [
-    { id: 1, title: 'Home Sample Collection', subtitle: 'Convenient and safe', img: '/assets/banner1.svg' },
-    { id: 2, title: 'Fast Digital Reports', subtitle: 'Access reports online within 24-48 hours', img: '/assets/banner2.svg' }
-  ];
+  const resp = await api.get('/banners');
+  return resp.data || [];
 }
 
 export default api;
