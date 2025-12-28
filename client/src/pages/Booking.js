@@ -45,6 +45,11 @@ export default function Booking() {
     if (step === 2) setAddress(localAddress);
     if (step === 4) setPayment({ method: paymentSelection, upiLink, utr, proofUrl, paymentId });
     if (step === 3 && paymentSelection === 'UPI') {
+      if (!user || !token) {
+        alert('Please login to generate a UPI payment link.');
+        return nav('/login?next=/booking');
+      }
+      setAuthToken(token);
       const p = await initiatePayment(total.toFixed(2), `Booking for ${localPatient.name}`);
       setPaymentId(p.id);
       setUpiLink(p.upiLink);
