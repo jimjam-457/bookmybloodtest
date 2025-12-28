@@ -26,7 +26,7 @@ router.post('/', requireAuth, async (req, res) => {
       req.user.id,
       patient.name, patient.age||null, patient.gender||null, patient.phone||null, patient.email||null,
       address.addressLine1||'', address.addressLine2||'', address.landmark||'', address.city||'', address.state||'', address.pincode||'', address.country||'India',
-      collectionType, new Date(datetime), total, 'Pending', paymentMethod || 'UPI', 'PENDING'
+      collectionType, new Date(datetime), total, 'Pending', 'COD', 'PENDING'
     ]
   );
   const bookingId = r.rows[0].id;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
-import api, { setAuthToken, initiatePayment, confirmPayment } from '../services/api';
+import api, { setAuthToken } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import FormInput from '../components/FormInput';
 
@@ -16,11 +16,7 @@ export default function Booking() {
   const [localAddress, setLocalAddress] = useState(address || { addressLine1:'', addressLine2:'', landmark:'', city:'', state:'', pincode:'', country:'India' });
   const [collectionType, setCollectionType] = useState('Home Collection');
   const [datetime, setDatetime] = useState('');
-  const [paymentSelection, setPaymentSelection] = useState(payment?.method || 'UPI');
-  const [cardInfo, setCardInfo] = useState({ card:'', name:'', expiry:'', cvv:'' });
-  const [upiLink, setUpiLink] = useState('');
-  const [utr, setUtr] = useState('');
-  const [proofUrl, setProofUrl] = useState('');
+  const [paymentSelection, setPaymentSelection] = useState('COD');
   const [paymentId, setPaymentId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,11 +27,7 @@ export default function Booking() {
     if (step === 1) return localPatient.name && localPatient.age && /^\d{7,15}$/.test(localPatient.phone) && /\S+@\S+\.\S+/.test(localPatient.email);
     if (step === 2) return localAddress.addressLine1 && localAddress.city && localAddress.state && /^\d{4,7}$/.test(localAddress.pincode);
     if (step === 3) return datetime;
-    if (step === 4) {
-      if (paymentSelection === 'CARD') return false;
-      if (paymentSelection === 'UPI') return !!paymentId && (!!utr || !!proofUrl);
-      return true;
-    }
+    if (step === 4) return true;
     return true;
   };
 
@@ -43,17 +35,7 @@ export default function Booking() {
     if (!canNext()) return;
     if (step === 1) setPatient(localPatient);
     if (step === 2) setAddress(localAddress);
-    if (step === 4) setPayment({ method: paymentSelection, upiLink, utr, proofUrl, paymentId });
-    if (step === 3 && paymentSelection === 'UPI') {
-      if (!user || !token) {
-        alert('Please login to generate a UPI payment link.');
-        return nav('/login?next=/booking');
-      }
-      setAuthToken(token);
-      const p = await initiatePayment(total.toFixed(2), `Booking for ${localPatient.name}`);
-      setPaymentId(p.id);
-      setUpiLink(p.upiLink);
-    }
+    if (step === 4) setPayment({ method: paymentSelection, paymentId });
     setStep(s => Math.min(STEPS.length-1, s+1));
   };
   const goBack = () => setStep(s => Math.max(0, s-1));
@@ -77,11 +59,6 @@ export default function Booking() {
         paymentMethod: paymentSelection,
         paymentId
       });
-      if (paymentSelection === 'UPI') {
-        try {
-          await confirmPayment({ paymentId, utr, proofUrl, bookingId: resp.data.id });
-        } catch {}
-      }
       clear();
       setLoading(false);
       nav('/my-bookings');
@@ -211,49 +188,10 @@ export default function Booking() {
             <div className="form-group">
               <label>Payment Method</label>
               <div className="gender-row">
-                {[
-                  {id:'CARD', label:'Card'},
-                  {id:'UPI', label:'UPI'},
-                  {id:'COD', label:'Cash on Collection'}
-                ].map(pm=>(
-                  <button key={pm.id} className={`pill ${paymentSelection===pm.id?'active':''}`} onClick={()=>setPaymentSelection(pm.id)}>{pm.label}</button>
-                ))}
+                <button className={`pill ${paymentSelection==='COD'?'active':''}`} onClick={()=>setPaymentSelection('COD')}>Cash on Collection</button>
               </div>
             </div>
 
-            {paymentSelection === 'CARD' && (
-              <div>
-                <FormInput label="Card Number" value={cardInfo.card} onChange={e=>setCardInfo({...cardInfo, card: e.target.value})} />
-                <FormInput label="Name on Card" value={cardInfo.name} onChange={e=>setCardInfo({...cardInfo, name: e.target.value})} />
-                <div className="row">
-                  <FormInput label="Expiry MM/YY" value={cardInfo.expiry} onChange={e=>setCardInfo({...cardInfo, expiry: e.target.value})} />
-                  <FormInput label="CVV" value={cardInfo.cvv} onChange={e=>setCardInfo({...cardInfo, cvv: e.target.value})} />
-                </div>
-              </div>
-            )}
-
-            {paymentSelection === 'UPI' && (
-              <div>
-                <div className="muted">Pay via UPI apps using the link below. Then enter UTR or upload a screenshot.</div>
-                <div className="card-inline">
-                  <div><strong>Amount:</strong> ₹{total.toFixed(2)}</div>
-                  <a className="btn small" href={upiLink || '#'} target="_blank" rel="noreferrer">Open UPI App</a>
-                </div>
-                <FormInput label="UTR / Reference ID" value={utr} onChange={e=>setUtr(e.target.value)} />
-                <div className="form-group">
-                  <label>Upload Payment Screenshot</label>
-                  <input type="file" accept="image/*" onChange={async e=>{
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const fd = new FormData();
-                    fd.append('image', file);
-                    const r = await api.post('/uploads', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-                    setProofUrl(r.data.imageUrl);
-                  }} />
-                  {proofUrl && <div className="muted small">Uploaded: {proofUrl}</div>}
-                </div>
-              </div>
-            )}
             {paymentSelection === 'COD' && <p className="muted">Pay the technician at the time of sample collection.</p>}
 
             <div className="actions">
