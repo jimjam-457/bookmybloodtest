@@ -33,6 +33,21 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Apply authentication middleware to ALL requests
 app.use(authMiddleware);
 
+// Health
+try {
+  const { query } = require('./db');
+  app.get('/api/health', async (req, res) => {
+    try {
+      await query('SELECT 1');
+      return res.json({ ok: true, db: true });
+    } catch (e) {
+      return res.status(503).json({ ok: false, db: false });
+    }
+  });
+} catch (e) {
+  app.get('/api/health', (req, res) => res.status(503).json({ ok: false, db: false }));
+}
+
 // Root route to avoid 404 for GET /
 app.get('/', (req, res) => {
   res.send(`
