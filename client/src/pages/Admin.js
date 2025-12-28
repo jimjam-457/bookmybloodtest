@@ -219,10 +219,10 @@ export default function Admin() {
         <div>
           <h3>Bookings</h3>
           {error && <div className="error">{error}</div>}
-          {bookings.map(b=>(
+          {(bookings||[]).map(b=>(
             <div key={b.id} className="card">
               <div>ID {b.id} — {b.status}</div>
-              <div>User: {b.userId} • Tests: {b.tests.map(t=>t.name).join(', ')}</div>
+              <div>User: {b.userId} • Total: ${Number(b.total||0).toFixed(2)}</div>
               <div>
                 <select value={b.status} onChange={e=>updateStatus(b.id, e.target.value)}>
                   <option>Pending</option>
