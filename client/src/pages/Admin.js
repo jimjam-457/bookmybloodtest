@@ -13,6 +13,7 @@ export default function Admin() {
   const [editingBannerId, setEditingBannerId] = useState(null);
   const [error, setError] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [openBookingId, setOpenBookingId] = useState(null);
 
   const fetchAll = useCallback(async () => {
     if (!user || user.role !== 'admin') {
@@ -220,9 +221,36 @@ export default function Admin() {
           <h3>Bookings</h3>
           {error && <div className="error">{error}</div>}
           {(bookings||[]).map(b=>(
-            <div key={b.id} className="card">
-              <div>ID {b.id} — {b.status}</div>
-              <div>User: {b.userId} • Total: ${Number(b.total||0).toFixed(2)}</div>
+            <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>setOpenBookingId(openBookingId===b.id?null:b.id)}>
+              <div><strong>ID {b.id}</strong> — {b.status}</div>
+              <div>User: {b.user_id || b.userId || '—'} • Total: ${Number(b.total||0).toFixed(2)}</div>
+              {openBookingId===b.id && (
+                <div style={{marginTop:10}}>
+                  <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12}}>
+                    <div className="card" style={{padding:12}}>
+                      <div><strong>Patient:</strong></div>
+                      <div>Name: {b.patient_name || '—'}</div>
+                      <div>Age: {b.age ?? '—'} • Gender: {b.gender || '—'}</div>
+                      <div>Phone: {b.phone || '—'}</div>
+                      <div>Email: {b.email || '—'}</div>
+                    </div>
+                    <div className="card" style={{padding:12}}>
+                      <div><strong>Address:</strong></div>
+                      <div>{b.address_line1 || '—'}</div>
+                      <div>{b.address_line2 || ''}</div>
+                      <div>Landmark: {b.landmark || '—'}</div>
+                      <div>City: {b.city || '—'} • State: {b.state || '—'}</div>
+                      <div>Pincode: {b.pincode || '—'} • Country: {b.country || '—'}</div>
+                    </div>
+                    <div className="card" style={{padding:12}}>
+                      <div><strong>Collection:</strong></div>
+                      <div>Type: {b.collection_type || '—'}</div>
+                      <div>Datetime: {b.datetime || '—'}</div>
+                      <div><strong>Payment:</strong> {b.payment_method || 'COD'} • {b.payment_status || 'PENDING'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div>
                 <select value={b.status} onChange={e=>updateStatus(b.id, e.target.value)}>
                   <option>Pending</option>
