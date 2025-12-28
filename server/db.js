@@ -1,6 +1,8 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 const dotenv = require('dotenv');
 dotenv.config();
+
+types.setTypeParser(1700, (val) => parseFloat(val));
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
