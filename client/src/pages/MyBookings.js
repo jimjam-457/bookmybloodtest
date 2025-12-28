@@ -8,7 +8,7 @@ export default function MyBookings() {
   }, []);
   const cancel = async (id) => {
     if (!window.confirm('Cancel booking?')) return;
-    await api.put(`/bookings/${id}/cancel`);
+    await api.put(`/bookings/${id}/status`, { status: 'Cancelled' });
     setBookings(prev=>prev.map(b=>b.id===id?{...b,status:'Cancelled'}:b));
   };
   return (
@@ -17,10 +17,10 @@ export default function MyBookings() {
       {bookings.length===0 ? <p>No bookings yet.</p> : bookings.map(b=>(
         <div key={b.id} className="card">
           <div>ID: {b.id} — {b.status}</div>
-          <div>Tests: {b.tests.map(t=>t.name).join(', ')}</div>
-          <div>When: {b.datetime}</div>
-          <div>Patient: {b.patient.name}</div>
-          <div>Total: ${b.total.toFixed(2)}</div>
+          <div>Tests: {Array.isArray(b.tests) ? b.tests.map(t=>t.name).join(', ') : '—'}</div>
+          <div>When: {b.datetime || '—'}</div>
+          <div>Patient: {(b.patient && b.patient.name) || b.patient_name || '—'}</div>
+          <div>Total: ${Number(b.total||0).toFixed(2)}</div>
           {b.status === 'Pending' && <button className="btn danger" onClick={()=>cancel(b.id)}>Cancel</button>}
         </div>
       ))}
