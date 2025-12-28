@@ -24,7 +24,10 @@ export default function TestCard({ test }) {
             {!inCart ? (
               <button className="btn" onClick={()=>addTest(test)}>Add</button>
             ) : (
-              <button className="btn pill danger" onClick={()=>removeTest(test.id)}>Remove</button>
+              <>
+                <button className="btn pill danger" onClick={()=>removeTest(test.id)}>Remove</button>
+                <Link to="/booking" className="btn" style={{marginLeft:8}}>Book</Link>
+              </>
             )}
           </div>
         </div>

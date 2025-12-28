@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import TestCard from '../components/TestCard';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useBooking } from '../context/BookingContext';
 
 export default function Tests() {
   const [tests, setTests] = useState([]);
   const [q, setQ] = useState('');
   const [searchParams] = useSearchParams();
+  const { items } = useBooking();
+  const nav = useNavigate();
 
   useEffect(()=> {
     api.get('/tests').then(r=>setTests(r.data)).catch(()=>setTests([]));
@@ -27,6 +30,13 @@ export default function Tests() {
       <div className="grid">
         {filtered.map(t=> <TestCard key={t.id} test={t} />)}
       </div>
+      {items.length > 0 && (
+        <div style={{position:'fixed', right:16, bottom:16, zIndex:1000}}>
+          <button className="btn" onClick={()=>nav('/booking')}>
+            Book ({items.length})
+          </button>
+        </div>
+      )}
     </div>
   );
 }
