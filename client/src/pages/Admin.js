@@ -21,6 +21,10 @@ export default function Admin() {
   const [newNote, setNewNote] = useState('');
   const [editingTestId, setEditingTestId] = useState(null);
   const [searchTests, setSearchTests] = useState('');
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [loadingTests, setLoadingTests] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [loadingBanners, setLoadingBanners] = useState(false);
   const toCsv = (rows) => {
     const headers = ['id','status','created_at','patient_name','phone','email','city','pincode','collection_type','datetime','total','payment_method','payment_status','user_id'];
     const escape = (v) => {
@@ -58,6 +62,8 @@ export default function Admin() {
       setError('Admin access required. Please login as admin.');
       return;
     }
+    setLoadingBookings(true);
+    setLoadingTests(true);
     try {
       const [bR, tR] = await Promise.all([
         api.get('/bookings', { params: {
@@ -74,6 +80,9 @@ export default function Admin() {
       setError(null);
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to load admin data.');
+    } finally {
+      setLoadingBookings(false);
+      setLoadingTests(false);
     }
   }, [user, filters]);
 
@@ -88,11 +97,25 @@ export default function Admin() {
     }
   };
   const fetchStats = async () => {
+    setLoadingStats(true);
     try {
       const r = await api.get('/bookings/stats');
       setStats(r.data || { statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
     } catch {
       setStats({ statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+  const fetchBanners = async () => {
+    setLoadingBanners(true);
+    try {
+      const r = await api.get('/banners');
+      setBanners(r.data);
+    } catch (e) {
+      setBanners([]);
+    } finally {
+      setLoadingBanners(false);
     }
   };
   const createTest = async () => {
@@ -278,6 +301,7 @@ export default function Admin() {
         <div>
           <h3>Manage Banners</h3>
           {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
+          {loadingBanners && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading banners...</div>}
           <div className="card">
             <div className="form">
               <input placeholder="Title" value={bannerForm.title} onChange={e=>setBannerForm({...bannerForm, title:e.target.value})} />
@@ -340,6 +364,7 @@ export default function Admin() {
         <div>
           <h3>Bookings</h3>
           {error && <div className="error">{error}</div>}
+          {loadingStats && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading stats...</div>}
           <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12, marginBottom:12}}>
             <div className="card">
               <div><strong>Total (7d)</strong></div>
@@ -423,6 +448,7 @@ export default function Admin() {
               <button className="btn outline" style={{marginLeft:8}} onClick={exportCsv}>Export CSV</button>
             </div>
           </div>
+          {loadingBookings && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading bookings...</div>}
           {(bookings||[]).map(b=>(
             <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>{
               setOpenBookingId(openBookingId===b.id?null:b.id);
@@ -529,6 +555,7 @@ export default function Admin() {
         <div>
           <h3>Manage Tests</h3>
           {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
+          {loadingTests && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading tests...</div>}
           <div className="card" style={{marginBottom:12}}>
             <div className="form">
               <div style={{marginBottom:8}}>
