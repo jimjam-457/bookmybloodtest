@@ -16,6 +16,11 @@ export default function Admin() {
   const [openBookingId, setOpenBookingId] = useState(null);
   const [filters, setFilters] = useState({ status:'', collectionType:'', city:'', pincode:'', from:'', to:'' });
   const [stats, setStats] = useState({ statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
+  const [bookingDetails, setBookingDetails] = useState({});
+  const [bookingNotes, setBookingNotes] = useState({});
+  const [newNote, setNewNote] = useState('');
+  const [editingTestId, setEditingTestId] = useState(null);
+  const [searchTests, setSearchTests] = useState('');
   const toCsv = (rows) => {
     const headers = ['id','status','created_at','patient_name','phone','email','city','pincode','collection_type','datetime','total','payment_method','payment_status','user_id'];
     const escape = (v) => {
@@ -197,6 +202,70 @@ export default function Admin() {
     }
   };
 
+  const fetchBookingDetails = async (bookingId) => {
+    try {
+      const r = await api.get(`/bookings/${bookingId}`);
+      setBookingDetails(prev => ({ ...prev, [bookingId]: r.data }));
+    } catch (e) {
+      console.error('Failed to fetch booking details:', e);
+    }
+  };
+
+  const fetchBookingNotes = async (bookingId) => {
+    try {
+      const r = await api.get(`/bookings/${bookingId}/notes`);
+      setBookingNotes(prev => ({ ...prev, [bookingId]: r.data || [] }));
+    } catch (e) {
+      console.error('Failed to fetch notes:', e);
+    }
+  };
+
+  const addBookingNote = async (bookingId) => {
+    if (!newNote.trim()) return;
+    try {
+      const r = await api.post(`/bookings/${bookingId}/notes`, { note: newNote });
+      setBookingNotes(prev => ({
+        ...prev,
+        [bookingId]: [r.data, ...(prev[bookingId] || [])]
+      }));
+      setNewNote('');
+      setError(null);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to add note');
+    }
+  };
+
+  const editTest = async () => {
+    if (!editingTestId) return createTest();
+    if (!newTest.name) { setError('Test name required'); return; }
+    try {
+      await api.put(`/tests/${editingTestId}`, newTest);
+      setNewTest({ name:'', description:'', price:0, fasting:false, sample:'Blood', category:'' });
+      setEditingTestId(null);
+      fetchAll();
+      setError(null);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to update test');
+    }
+  };
+
+  const startEditTest = (t) => {
+    setEditingTestId(t.id);
+    setNewTest({
+      name: t.name || '',
+      description: t.description || '',
+      price: t.price || 0,
+      fasting: t.fasting || false,
+      sample: t.sample || 'Blood',
+      category: t.category || ''
+    });
+  };
+
+  const cancelEditTest = () => {
+    setEditingTestId(null);
+    setNewTest({ name:'', description:'', price:0, fasting:false, sample:'Blood', category:'' });
+  };
+
   return (
     <div className="admin-page">
       <div style={{display:'flex', gap:12, marginBottom:12}}>
@@ -355,7 +424,13 @@ export default function Admin() {
             </div>
           </div>
           {(bookings||[]).map(b=>(
-            <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>setOpenBookingId(openBookingId===b.id?null:b.id)}>
+            <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>{
+              setOpenBookingId(openBookingId===b.id?null:b.id);
+              if (openBookingId !== b.id) {
+                fetchBookingDetails(b.id);
+                fetchBookingNotes(b.id);
+              }
+            }}>
               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:8}}>
                 <div><strong>ID {b.id}</strong> — {b.status}</div>
                 <div className="muted small">
@@ -395,6 +470,46 @@ export default function Admin() {
                       <div><strong>Payment:</strong> {b.payment_method || 'COD'} • {b.payment_status || 'PENDING'}</div>
                     </div>
                   </div>
+
+                  {bookingDetails[b.id]?.items && bookingDetails[b.id].items.length > 0 && (
+                    <div className="card" style={{marginTop:12, padding:12}}>
+                      <div><strong>Tests Included:</strong></div>
+                      <div style={{marginTop:8}}>
+                        {bookingDetails[b.id].items.map((item, idx) => (
+                          <div key={idx} style={{padding:8, background:'#f3f4f6', borderRadius:4, marginBottom:8}}>
+                            <div><strong>{item.name || 'Test #' + item.id}</strong></div>
+                            <div className="muted small">Sample: {item.sample} • Fasting: {item.fasting ? 'Yes' : 'No'} • Price: ${Number(item.price||0).toFixed(2)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="card" style={{marginTop:12, padding:12}}>
+                    <div><strong>Notes:</strong></div>
+                    <div style={{marginTop:8}}>
+                      {(bookingNotes[b.id] || []).length === 0 ? (
+                        <div className="muted small">No notes yet</div>
+                      ) : (
+                        bookingNotes[b.id].map((note, idx) => (
+                          <div key={idx} style={{padding:8, background:'#fef3c7', borderRadius:4, marginBottom:8}}>
+                            <div className="muted small">{note.admin_name || 'Admin'} • {new Date(note.created_at).toLocaleString()}</div>
+                            <div style={{marginTop:4}}>{note.note}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div style={{marginTop:8, display:'flex', gap:8}}>
+                      <input 
+                        placeholder="Add a note..." 
+                        value={newNote} 
+                        onChange={e=>setNewNote(e.target.value)}
+                        onKeyPress={e => e.key === 'Enter' && addBookingNote(b.id)}
+                        style={{flex:1}}
+                      />
+                      <button className="btn" onClick={()=>addBookingNote(b.id)}>Add</button>
+                    </div>
+                  </div>
                 </div>
               )}
               <div>
@@ -413,22 +528,54 @@ export default function Admin() {
       {view === 'tests' && (
         <div>
           <h3>Manage Tests</h3>
-          <div className="form">
-            <input placeholder="Name" value={newTest.name} onChange={e=>setNewTest({...newTest, name:e.target.value})} />
-            <input placeholder="Category" value={newTest.category} onChange={e=>setNewTest({...newTest, category:e.target.value})} />
-            <input placeholder="Price" type="number" value={newTest.price} onChange={e=>setNewTest({...newTest, price: Number(e.target.value)})} />
-            <input placeholder="Description" value={newTest.description} onChange={e=>setNewTest({...newTest, description:e.target.value})} />
-            <div>
-              <label><input type="checkbox" checked={newTest.fasting} onChange={e=>setNewTest({...newTest, fasting:e.target.checked})} /> Fasting</label>
+          {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
+          <div className="card" style={{marginBottom:12}}>
+            <div className="form">
+              <div style={{marginBottom:8}}>
+                <strong>{editingTestId ? 'Edit Test' : 'Create New Test'}</strong>
+              </div>
+              <input placeholder="Name" value={newTest.name} onChange={e=>setNewTest({...newTest, name:e.target.value})} />
+              <input placeholder="Category" value={newTest.category} onChange={e=>setNewTest({...newTest, category:e.target.value})} />
+              <input placeholder="Price" type="number" step="0.01" value={newTest.price} onChange={e=>setNewTest({...newTest, price: Number(e.target.value)})} />
+              <input placeholder="Description" value={newTest.description} onChange={e=>setNewTest({...newTest, description:e.target.value})} />
+              <select value={newTest.sample} onChange={e=>setNewTest({...newTest, sample:e.target.value})}>
+                <option value="Blood">Blood</option>
+                <option value="Urine">Urine</option>
+                <option value="Saliva">Saliva</option>
+                <option value="Other">Other</option>
+              </select>
+              <div>
+                <label><input type="checkbox" checked={newTest.fasting} onChange={e=>setNewTest({...newTest, fasting:e.target.checked})} /> Fasting Required</label>
+              </div>
+              <div style={{display:'flex', gap:8}}>
+                <button className="btn" onClick={editingTestId ? editTest : createTest}>
+                  {editingTestId ? 'Update Test' : 'Create Test'}
+                </button>
+                {editingTestId && <button className="btn outline" onClick={cancelEditTest}>Cancel</button>}
+              </div>
             </div>
-            <button className="btn" onClick={createTest}>Create Test</button>
           </div>
+
+          <div className="card" style={{marginBottom:12}}>
+            <input 
+              placeholder="Search tests..." 
+              value={searchTests} 
+              onChange={e=>setSearchTests(e.target.value)}
+              style={{width:'100%'}}
+            />
+          </div>
+
           <div className="grid">
-            {tests.map(t=>(
+            {tests.filter(t => !searchTests || t.name.toLowerCase().includes(searchTests.toLowerCase()) || t.category.toLowerCase().includes(searchTests.toLowerCase())).map(t=>(
               <div key={t.id} className="card">
-                <div>{t.name}</div>
-                <div>${t.price}</div>
-                <div><button className="btn danger" onClick={()=>deleteTest(t.id)}>Delete</button></div>
+                <div><strong>{t.name}</strong></div>
+                <div className="muted small">Category: {t.category}</div>
+                <div className="muted small">Sample: {t.sample || 'Blood'} • Fasting: {t.fasting ? 'Yes' : 'No'}</div>
+                <div style={{marginTop:8}}><strong>${Number(t.price||0).toFixed(2)}</strong></div>
+                <div style={{marginTop:8, display:'flex', gap:8}}>
+                  <button className="btn" onClick={()=>startEditTest(t)}>Edit</button>
+                  <button className="btn danger" onClick={()=>deleteTest(t.id)}>Delete</button>
+                </div>
               </div>
             ))}
           </div>
