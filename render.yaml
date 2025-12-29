@@ -13,3 +13,5 @@ services:
         value: require
       - key: NODE_ENV
         value: production
+      - key: CORS_ORIGINS
+        value: http://localhost:3000,https://bookmybloodtest.vercel.app

@@ -9,19 +9,32 @@ const { authMiddleware } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS configuration - allow frontend to communicate with backend
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,https://bookmybloodtest.vercel.app')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
+
+console.log('Allowed CORS origins:', allowedOrigins);
+
 const corsOptions = {
   origin(origin, cb) {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(null, false);
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log(`CORS: Allowing origin ${origin}`);
+      return cb(null, true);
+    }
+    console.warn(`CORS: Blocking origin ${origin}`);
+    return cb(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
 };
+
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
