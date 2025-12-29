@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import FormInput from '../components/FormInput';
 
 export default function Register() {
@@ -11,37 +11,51 @@ export default function Register() {
   const [form, setForm] = useState({ name:'', email:'', password:'' });
   const [error, setError] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const submit = async () => {
     const validEmail = /\S+@\S+\.\S+/.test(form.email);
-    if (!form.name || !validEmail || form.password.length < 6) { setError('Please enter name, a valid email, and 6+ char password'); return; }
+    if (!form.name || !validEmail || form.password.length < 6) { 
+      setError('Please enter name, valid email, and 6+ character password'); 
+      return; 
+    }
+    setLoading(true);
     const res = await register(form.name, form.email, form.password);
+    setLoading(false);
     if (res.ok) nav(next);
     else setError(res.message);
   };
+
   return (
     <div className="container">
-      <h2 className="page-title">Create your account</h2>
-      <div className="card" style={{maxWidth:520, margin:'0 auto'}}>
-        <div className="form">
-          <FormInput
-            label="Full Name"
-            value={form.name}
-            onChange={e=>setForm({...form, name:e.target.value})}
-            placeholder="e.g., Priya Sharma"
-            autoComplete="name"
-          />
-          <FormInput
-            label="Email"
-            type="email"
-            value={form.email}
-            onChange={e=>setForm({...form, email:e.target.value})}
-            placeholder="you@example.com"
-            autoComplete="email"
-          />
-          <div className="row">
+      <div style={{maxWidth:'480px', margin:'0 auto', paddingTop:'20px', paddingBottom:'40px'}}>
+        <div style={{marginBottom:32, textAlign:'center'}}>
+          <h1 style={{fontSize:'32px', fontWeight:'800', color:'#001d3d', margin:'0 0 8px 0'}}>🩸 Create Account</h1>
+          <p style={{color:'#6b7280', margin:0}}>Join thousands of users booking blood tests with ease</p>
+        </div>
+
+        <div className="card" style={{borderRadius:'18px'}}>
+          <div className="form">
+            <FormInput
+              label="Full Name"
+              value={form.name}
+              onChange={e=>setForm({...form, name:e.target.value})}
+              placeholder="e.g., Priya Sharma"
+              autoComplete="name"
+            />
+
+            <FormInput
+              label="Email Address"
+              type="email"
+              value={form.email}
+              onChange={e=>setForm({...form, email:e.target.value})}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <div style={{display:'flex', gap:8, alignItems:'center'}}>
+              <div style={{display:'flex', gap:8, alignItems:'flex-end'}}>
                 <input
                   id="password"
                   type={showPwd ? 'text' : 'password'}
@@ -51,16 +65,52 @@ export default function Register() {
                   autoComplete="new-password"
                   style={{flex:1}}
                 />
-                <button type="button" className="btn small outline" onClick={()=>setShowPwd(s=>!s)}>
-                  {showPwd ? 'Hide' : 'Show'}
+                <button 
+                  type="button" 
+                  className="btn outline" 
+                  onClick={()=>setShowPwd(s=>!s)}
+                  style={{padding:'12px 14px', fontSize:'13px'}}
+                >
+                  {showPwd ? '👁️ Hide' : '👁️ Show'}
                 </button>
               </div>
+              <div style={{fontSize:'12px', color:'#6b7280', marginTop:'6px'}}>
+                ✓ At least 6 characters long
+              </div>
+            </div>
+
+            {error && (
+              <div className="error" role="alert">
+                <strong>⚠️ Error:</strong> {error}
+              </div>
+            )}
+
+            <button 
+              className="btn" 
+              onClick={submit}
+              disabled={loading}
+              style={{width:'100%', marginTop:'20px', padding:'12px 16px', fontSize:'16px'}}
+            >
+              {loading ? '⏳ Creating account...' : '✓ Create Account'}
+            </button>
+
+            <div style={{marginTop:20, paddingTop:20, borderTop:'1px solid rgba(3, 105, 161, 0.1)', textAlign:'center'}}>
+              <p style={{color:'#6b7280', margin:'0 0 12px 0', fontSize:'14px'}}>Already have an account?</p>
+              <Link to="/login" className="btn outline" style={{width:'100%', textAlign:'center'}}>
+                Sign In
+              </Link>
             </div>
           </div>
-          {error && <div className="error" role="alert">{error}</div>}
-          <button className="btn" onClick={submit}>Register</button>
+        </div>
+
+        <div style={{marginTop:24, padding:'16px', background:'#e0f2fe', borderRadius:'12px', border:'1px solid rgba(3, 105, 161, 0.2)', fontSize:'13px', color:'#0369a1'}}>
+          <div style={{marginBottom:'8px'}}><strong>✓ By registering, you agree to:</strong></div>
+          <ul style={{margin:'0', paddingLeft:'20px', fontSize:'12px'}}>
+            <li>Our Terms of Service</li>
+            <li>Privacy Policy</li>
+            <li>Secure health data handling</li>
+          </ul>
         </div>
       </div>
     </div>
   );
-}

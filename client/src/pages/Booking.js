@@ -71,41 +71,51 @@ export default function Booking() {
 
   return (
     <div className="booking-page">
-      <h2 className="page-title">Book a Blood Test</h2>
+      <div style={{marginBottom:32}}>
+        <h1 className="page-title" style={{margin:0}}>🩸 Book Your Blood Test</h1>
+        <p style={{color:'#6b7280', marginTop:6}}>Complete your booking in {STEPS.length} simple steps</p>
+      </div>
 
       <div className="stepper">
         {STEPS.map((s,i)=>(
           <div key={s} className={`step ${i===step?'active': i<step ? 'done' : ''}`}>
-            <div className="circle">{i+1}</div>
+            <div className="circle">{i<step ? '✓' : i+1}</div>
             <div className="label">{s}</div>
           </div>
         ))}
       </div>
 
-      <div className="step-content">
+      <div className="step-content" style={{marginTop:28}}>
         {step===0 && (
-          <div>
-            <h3>Selected Tests</h3>
-            {items.length===0 ? <p className="muted">No tests selected.</p> :
-              items.map(t=>(
-                <div key={t.id} className="line card-inline">
-                  <div>
-                    <strong>{t.name}</strong>
-                    <div className="muted small">{t.category} • {t.sample}</div>
-                  </div>
-                  <div className="price-col">
-                    ${t.price.toFixed(2)}
-                    <button className="pill danger" onClick={()=>removeTest(t.id)}>Remove</button>
-                  </div>
-                </div>
-              ))
-            }
-            <div className="actions">
-              <div className="muted">Total: <strong>${total.toFixed(2)}</strong></div>
-              <div>
-                <button className="btn outline" onClick={()=>nav('/tests')}>Add More</button>
-                <button className="btn" onClick={goNext} disabled={!canNext()}>Continue</button>
+          <div className="card">
+            <h3 style={{margin:'0 0 16px 0', color:'#001d3d', fontWeight:'700'}}>📋 Selected Tests</h3>
+            {items.length===0 ? (
+              <div style={{padding:'32px', textAlign:'center', background:'#f0f9ff', borderRadius:'12px', border:'1px solid rgba(3, 105, 161, 0.1)'}}>
+                <p className="muted" style={{fontSize:'14px'}}>No tests selected yet. Start browsing tests to begin.</p>
               </div>
+            ) :
+              <div>
+                {items.map(t=>(
+                  <div key={t.id} className="line card-inline" style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px', borderRadius:'10px', background:'#f8fafc', marginBottom:'8px', border:'1px solid rgba(3, 105, 161, 0.06)'}}>
+                    <div>
+                      <strong style={{color:'#001d3d'}}>{t.name}</strong>
+                      <div className="muted small">{t.category} • {t.sample}</div>
+                    </div>
+                    <div style={{display:'flex', gap:'8px', alignItems:'center'}}>
+                      <div style={{fontWeight:'700', color:'#0369a1', fontSize:'16px'}}>${t.price.toFixed(2)}</div>
+                      <button className="btn danger" style={{padding:'6px 10px', fontSize:'12px'}} onClick={()=>removeTest(t.id)}>✕</button>
+                    </div>
+                  </div>
+                ))
+              }
+                <div style={{marginTop:16, padding:'16px', background:'#e0f2fe', borderRadius:'12px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div style={{fontWeight:'700', color:'#0369a1', fontSize:'16px'}}>Total: ${total.toFixed(2)}</div>
+                </div>
+              </div>
+            }
+            <div style={{marginTop:20, display:'flex', gap:'12px', justifyContent:'flex-end'}}>
+              <button className="btn outline" onClick={()=>nav('/tests')}>+ Add More</button>
+              <button className="btn" onClick={goNext} disabled={!canNext()}>Continue</button>
             </div>
           </div>
         )}
