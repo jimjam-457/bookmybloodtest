@@ -7,12 +7,14 @@ import { useBooking } from '../context/BookingContext';
 export default function Tests() {
   const [tests, setTests] = useState([]);
   const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const { items } = useBooking();
   const nav = useNavigate();
 
   useEffect(()=> {
-    api.get('/tests').then(r=>setTests(r.data)).catch(()=>setTests([]));
+    setLoading(true);
+    api.get('/tests').then(r=>setTests(r.data)).catch(()=>setTests([])).finally(()=>setLoading(false));
   }, []);
 
   // If package query param is set, use it as the search query
@@ -27,6 +29,7 @@ export default function Tests() {
     <div>
       <h2>Available Tests</h2>
       <input placeholder="Search by name or category" value={q} onChange={e=>setQ(e.target.value)} />
+      {loading && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading tests...</div>}
       <div className="grid">
         {filtered.map(t=> <TestCard key={t.id} test={t} />)}
       </div>

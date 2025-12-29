@@ -6,12 +6,15 @@ import { useBooking } from '../context/BookingContext';
 export default function TestDetails() {
   const { id } = useParams();
   const [test, setTest] = useState(null);
+  const [loading, setLoading] = useState(true);
   const nav = useNavigate();
   const { addTest } = useBooking();
   useEffect(()=> {
-    api.get(`/tests/${id}`).then(r=>setTest(r.data)).catch(()=>setTest(null));
+    setLoading(true);
+    api.get(`/tests/${id}`).then(r=>setTest(r.data)).catch(()=>setTest(null)).finally(()=>setLoading(false));
   }, [id]);
-  if (!test) return <div>Loading...</div>;
+  if (loading) return <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4}}>Loading test details...</div>;
+  if (!test) return <div>Test not found.</div>;
   return (
     <div>
       <h2>{test.name}</h2>

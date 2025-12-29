@@ -3,8 +3,10 @@ import api from '../services/api';
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   useEffect(()=> {
-    api.get('/bookings').then(r=>setBookings(r.data)).catch(()=>setBookings([]));
+    setLoading(true);
+    api.get('/bookings').then(r=>setBookings(r.data)).catch(()=>setBookings([])).finally(()=>setLoading(false));
   }, []);
   const cancel = async (id) => {
     if (!window.confirm('Cancel booking?')) return;
@@ -14,6 +16,7 @@ export default function MyBookings() {
   return (
     <div>
       <h2>My Bookings</h2>
+      {loading && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading bookings...</div>}
       {bookings.length===0 ? <p>No bookings yet.</p> : bookings.map(b=>(
         <div key={b.id} className="card">
           <div>ID: {b.id} — {b.status}</div>
