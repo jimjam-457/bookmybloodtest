@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api, { getApiRoot } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -140,15 +141,6 @@ export default function Admin() {
       fetchAll();
       setError(null);
     } catch (e) { setError(e.response?.data?.message || 'Failed to delete test'); }
-  };
-
-  const fetchBanners = async () => {
-    try {
-      const r = await api.get('/banners');
-      setBanners(r.data);
-    } catch (e) {
-      setBanners([]);
-    }
   };
 
   const createBanner = async () => {
