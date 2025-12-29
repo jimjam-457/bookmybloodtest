@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import HomeBanners from '../components/HomeBanners';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { getBanners } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
@@ -30,13 +31,12 @@ export default function Home() {
     <div className="container">
       <section className="hero home-hero">
         <div className="hero-left">
-          <h1>Book Blood Test Online at Home or Lab</h1>
-          <p className="muted">Book blood test at home with convenient diagnostic lab booking. Certified labs and fast digital reports across India.</p>
-          <div style={{marginTop:16}}>
-            <Link to="/tests" className="btn">View Tests</Link>
+          <h1>🩸 Book Blood Test Online</h1>
+          <p className="muted">Quick, convenient diagnostic lab booking with home collection. Certified labs, fast digital reports, and trusted service across India.</p>
+          <div style={{marginTop:24, display:'flex', gap:12, flexWrap:'wrap'}}>
+            <Link to="/tests" className="btn">Browse Tests</Link>
             <button
               className="btn outline"
-              style={{marginLeft:12}}
               onClick={() => {
                 if (!user) {
                   const next = items && items.length > 0 ? '/booking' : '/tests';
@@ -46,31 +46,53 @@ export default function Home() {
                 return nav('/tests');
               }}
             >
-              Book Blood Test
+              Book Now
             </button>
           </div>
-          <div style={{marginTop:20}} className="features-grid">
+          <div style={{marginTop:28}} className="features-grid">
             <div className="card small">
-              <strong>Home Sample Collection</strong>
-              <div className="muted small">We collect from your doorstep</div>
+              <strong>🏠 Home Collection</strong>
+              <div className="muted small">Sample collected from your doorstep</div>
             </div>
             <div className="card small">
-              <strong>Fast Digital Reports</strong>
-              <div className="muted small">Secure online reports</div>
+              <strong>⚡ Fast Reports</strong>
+              <div className="muted small">Digital reports in 24-48 hours</div>
             </div>
             <div className="card small">
-              <strong>Certified Labs</strong>
-              <div className="muted small">Accurate & reliable</div>
+              <strong>✓ Certified Labs</strong>
+              <div className="muted small">Accurate & NABL accredited</div>
             </div>
           </div>
         </div>
-
-        
       </section>
 
-      <section style={{marginTop:20}}>
-        <h3>Featured Offers</h3>
-        {loading ? <div className="muted">Loading banners...</div> : <HomeBanners banners={banners} />}
+      <section style={{marginTop:40}}>
+        <div style={{marginBottom:20}}>
+          <h2 style={{margin:0, color:'#001d3d', fontWeight:800, fontSize:28}}>🎯 Featured Offers</h2>
+          <p style={{color:'#6b7280', marginTop:6}}>Explore our special health packages and discounts</p>
+        </div>
+        {loading ? <LoadingSpinner message="Loading offers..." /> : <HomeBanners banners={banners} />}
+      </section>
+
+      <section style={{marginTop:40, padding:'40px 32px', borderRadius:'20px', background:'linear-gradient(135deg, rgba(3,105,161,0.08) 0%, rgba(6,182,212,0.04) 100%)', border:'1px solid rgba(3, 105, 161, 0.1)'}}>
+        <h2 style={{margin:'0 0 16px 0', color:'#001d3d', fontWeight:800, fontSize:24}}>Why Choose Us?</h2>
+        <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))'}}>
+          <div className="card" style={{textAlign:'center'}}>
+            <div style={{fontSize:'32px', marginBottom:'12px'}}>💉</div>
+            <strong style={{fontSize:'16px', color:'#0369a1'}}>Professional Phlebotomists</strong>
+            <p style={{margin:'8px 0 0 0', color:'#6b7280', fontSize:'14px'}}>Trained and certified for safe sample collection</p>
+          </div>
+          <div className="card" style={{textAlign:'center'}}>
+            <div style={{fontSize:'32px', marginBottom:'12px'}}>🔒</div>
+            <strong style={{fontSize:'16px', color:'#0369a1'}}>Secure & Confidential</strong>
+            <p style={{margin:'8px 0 0 0', color:'#6b7280', fontSize:'14px'}}>Your health data is encrypted and protected</p>
+          </div>
+          <div className="card" style={{textAlign:'center'}}>
+            <div style={{fontSize:'32px', marginBottom:'12px'}}>📱</div>
+            <strong style={{fontSize:'16px', color:'#0369a1'}}>Easy Digital Access</strong>
+            <p style={{margin:'8px 0 0 0', color:'#6b7280', fontSize:'14px'}}>View reports anytime, anywhere on your phone</p>
+          </div>
+        </div>
       </section>
     </div>
   );
