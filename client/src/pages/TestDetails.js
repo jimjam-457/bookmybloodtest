@@ -63,7 +63,7 @@ export default function TestDetails() {
               </div>
               <div style={{paddingTop:'12px', borderTop:'1px solid rgba(3, 105, 161, 0.1)'}}>
                 <div className="muted small">Price</div>
-                <div style={{fontSize:'24px', fontWeight:'800', color:'#0369a1', marginTop:'4px'}}>${test.price.toFixed(2)}</div>
+                <div style={{fontSize:'24px', fontWeight:'800', color:'#0369a1', marginTop:'4px'}}>₹{test.price.toFixed(0)}</div>
               </div>
             </div>
           </div>

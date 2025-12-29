@@ -79,7 +79,7 @@ export default function MyBookings() {
                     <div>
                       <div className="muted small">Total Amount</div>
                       <div style={{fontWeight:'600', color:'#0369a1', marginTop:'4px', fontSize:'16px'}}>
-                        ${Number(b.total||0).toFixed(2)}
+                        ₹{Number(b.total||0).toFixed(0)}
                       </div>
                     </div>
                   </div>

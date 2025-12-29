@@ -21,7 +21,7 @@ export default function TestCard({ test }) {
           </div>
         </div>
         <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', minWidth:90}}>
-          <div style={{fontWeight:'800', fontSize:'20px', color:'#0369a1'}}>${test.price.toFixed(2)}</div>
+          <div style={{fontWeight:'800', fontSize:'20px', color:'#0369a1'}}>₹{test.price.toFixed(0)}</div>
           <div style={{fontSize:'11px', color:'#6b7280', marginTop:'2px'}}>All-inclusive</div>
         </div>
       </div>

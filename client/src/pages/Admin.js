@@ -462,7 +462,7 @@ export default function Admin() {
                   })()}
                 </div>
               </div>
-              <div>User: {b.user_id || b.userId || '—'} • Total: ${Number(b.total||0).toFixed(2)}</div>
+              <div>User: {b.user_id || b.userId || '—'} • Total: ₹{Number(b.total||0).toFixed(0)}</div>
               {openBookingId===b.id && (
                 <div style={{marginTop:10}}>
                   <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12}}>

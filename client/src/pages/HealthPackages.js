@@ -11,7 +11,7 @@ export default function HealthPackages() {
       id: 'thyroid-panel',
       icon: '🦋',
       title: 'Thyroid Panel',
-      price: '$45',
+      price: '₹3999',
       description: 'Complete thyroid health assessment',
       tests: ['TSH', 'Free T3', 'Free T4', 'TPO Antibodies'],
       best_for: 'Monitoring thyroid health and hormone levels'
@@ -20,7 +20,7 @@ export default function HealthPackages() {
       id: 'diabetes-screening',
       icon: '📊',
       title: 'Diabetes Screening',
-      price: '$35',
+      price: '₹2999',
       description: 'Detect and monitor diabetes risk',
       tests: ['Fasting Glucose', 'HbA1c', 'Post-Meal Glucose'],
       best_for: 'Early detection and diabetes risk assessment'
@@ -29,7 +29,7 @@ export default function HealthPackages() {
       id: 'cardiac-health',
       icon: '❤️',
       title: 'Cardiac Health',
-      price: '$65',
+      price: '₹5499',
       description: 'Comprehensive heart health check',
       tests: ['Lipid Profile', 'Troponin', 'BNP'],
       best_for: 'Heart disease prevention and assessment'
@@ -38,7 +38,7 @@ export default function HealthPackages() {
       id: 'liver-function',
       icon: '🫘',
       title: 'Liver Function',
-      price: '$50',
+      price: '₹4199',
       description: 'Complete liver health evaluation',
       tests: ['Bilirubin', 'ALT/AST', 'Albumin', 'Proteins'],
       best_for: 'Liver health and detoxification check'
@@ -47,7 +47,7 @@ export default function HealthPackages() {
       id: 'kidney-function',
       icon: '💧',
       title: 'Kidney Function',
-      price: '$40',
+      price: '₹3299',
       description: 'Assess kidney health and function',
       tests: ['Creatinine', 'BUN', 'Electrolytes'],
       best_for: 'Kidney function and renal health'
@@ -56,7 +56,7 @@ export default function HealthPackages() {
       id: 'full-body-checkup',
       icon: '✨',
       title: 'Full Body Checkup',
-      price: '$120',
+      price: '₹9999',
       description: 'Complete health assessment',
       tests: ['50+ Parameters', 'All Major Systems', 'Complete Report'],
       best_for: 'Annual health screening and wellness'

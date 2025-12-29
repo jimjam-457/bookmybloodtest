@@ -109,7 +109,7 @@ export default function Booking() {
                 ))
               }
                 <div style={{marginTop:16, padding:'16px', background:'#e0f2fe', borderRadius:'12px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                  <div style={{fontWeight:'700', color:'#0369a1', fontSize:'16px'}}>Total: ${total.toFixed(2)}</div>
+                  <div style={{fontWeight:'700', color:'#0369a1', fontSize:'16px'}}>Total: ₹{total.toFixed(0)}</div>
                 </div>
               </div>
             }
