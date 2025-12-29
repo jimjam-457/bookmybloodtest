@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
@@ -16,7 +17,7 @@ export default function MyBookings() {
   return (
     <div>
       <h2>My Bookings</h2>
-      {loading && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading bookings...</div>}
+      {loading && <LoadingSpinner message="Loading bookings..." />}
       {bookings.length===0 ? <p>No bookings yet.</p> : bookings.map(b=>(
         <div key={b.id} className="card">
           <div>ID: {b.id} — {b.status}</div>

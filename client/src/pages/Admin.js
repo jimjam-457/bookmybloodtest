@@ -301,7 +301,7 @@ export default function Admin() {
         <div>
           <h3>Manage Banners</h3>
           {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
-          {loadingBanners && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading banners...</div>}
+          {loadingBanners && <LoadingSpinner message="Loading banners..." />}
           <div className="card">
             <div className="form">
               <input placeholder="Title" value={bannerForm.title} onChange={e=>setBannerForm({...bannerForm, title:e.target.value})} />
@@ -364,7 +364,7 @@ export default function Admin() {
         <div>
           <h3>Bookings</h3>
           {error && <div className="error">{error}</div>}
-          {loadingStats && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading stats...</div>}
+          {loadingStats && <LoadingSpinner message="Loading stats..." />}
           <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12, marginBottom:12}}>
             <div className="card">
               <div><strong>Total (7d)</strong></div>
@@ -448,7 +448,7 @@ export default function Admin() {
               <button className="btn outline" style={{marginLeft:8}} onClick={exportCsv}>Export CSV</button>
             </div>
           </div>
-          {loadingBookings && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading bookings...</div>}
+          {loadingBookings && <LoadingSpinner message="Loading bookings..." />}
           {(bookings||[]).map(b=>(
             <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>{
               setOpenBookingId(openBookingId===b.id?null:b.id);
@@ -555,7 +555,7 @@ export default function Admin() {
         <div>
           <h3>Manage Tests</h3>
           {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
-          {loadingTests && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading tests...</div>}
+          {loadingTests && <LoadingSpinner message="Loading tests..." />}
           <div className="card" style={{marginBottom:12}}>
             <div className="form">
               <div style={{marginBottom:8}}>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useBooking } from '../context/BookingContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function TestDetails() {
   const { id } = useParams();
@@ -13,7 +14,7 @@ export default function TestDetails() {
     setLoading(true);
     api.get(`/tests/${id}`).then(r=>setTest(r.data)).catch(()=>setTest(null)).finally(()=>setLoading(false));
   }, [id]);
-  if (loading) return <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4}}>Loading test details...</div>;
+  if (loading) return <LoadingSpinner message="Loading test details..." />;
   if (!test) return <div>Test not found.</div>;
   return (
     <div>

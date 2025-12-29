@@ -3,6 +3,7 @@ import api from '../services/api';
 import TestCard from '../components/TestCard';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useBooking } from '../context/BookingContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Tests() {
   const [tests, setTests] = useState([]);
@@ -29,9 +30,9 @@ export default function Tests() {
     <div>
       <h2>Available Tests</h2>
       <input placeholder="Search by name or category" value={q} onChange={e=>setQ(e.target.value)} />
-      {loading && <div style={{padding:12, background:'#e0f2fe', color:'#0369a1', borderRadius:4, marginBottom:12}}>Loading tests...</div>}
+      {loading && <LoadingSpinner message="Loading tests..." />}
       <div className="grid">
-        {filtered.map(t=> <TestCard key={t.id} test={t} />)}
+        {!loading && filtered.map(t=> <TestCard key={t.id} test={t} />)}
       </div>
       {items.length > 0 && (
         <div style={{position:'fixed', right:16, bottom:16, zIndex:1000}}>
