@@ -1,5 +1,154 @@
 # Blood Test Booking System
 
+Current status summary (as of 2025-12-28)
+- Full-stack app with React frontend and Express/Postgres backend
+- Authentication uses DB-backed tokens (no JWT); client stores token in localStorage
+- Booking flow is multi-step and now uses only Cash on Collection (COD) for payments
+- Admin can view bookings and update status; each booking expands to show patient, address, collection, and payment details
+
+Contents
+- Tech Stack
+- Project Structure
+- Environment Variables
+- Running Locally
+- Data Model
+- API Endpoints
+- Client Flows
+- Admin Flows
+- Deployment Notes
+- Known Gaps and Next Steps
+
+Tech Stack
+- Frontend: React 18, React Router 6, Context API, axios, react-helmet-async
+- Backend: Node.js (Express), Postgres (`pg`), bcryptjs, multer, morgan, cors, dotenv
+- Build: create-react-app (`react-scripts`)
+- Hosting: Frontend on Vercel; Backend designed for any Node host with Postgres (Render/Heroku/etc.)
+
+Project Structure
+- client/
+  - `src/App.js` — routes and shell
+  - `src/index.js` — app bootstrap
+  - `src/index.css` — theme and layout
+  - components/
+    - `Header.js`, `Footer.js`, `FormInput.js`, `HomeBanners.js`, `TestCard.js`
+  - pages/
+    - `Home.js`, `Tests.js`, `TestDetails.js`, `Booking.js`, `Login.js`, `Register.js`, `MyBookings.js`, `Admin.js`, `HealthPackages.js`, `Contact.js`
+  - context/
+    - `AuthContext.js` — login/register/logout; persists token and user; sets axios `Authorization`
+    - `BookingContext.js` — selected tests, patient, address, payment info
+  - services/
+    - `api.js` — axios instance and helpers
+- server/
+  - `index.js` — app wiring; mounts routes under `/api/*`; static `/uploads`
+  - `db.js` — Postgres Pool (reads `DATABASE_URL`, `PGSSLMODE`)
+  - middleware/
+    - `auth.js` — reads `Authorization: Bearer <token>`; attaches `req.user`; `requireAuth`, `requireAdmin`
+  - routes/
+    - `auth.js` — `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+    - `tests.js` — CRUD (admin create/update/delete, public read)
+    - `bookings.js` — user create; list; admin status updates; persists `booking_items`
+    - `uploads.js` — multipart image upload (screenshots, etc.), serves via `/uploads/...`
+    - `payments.js` — kept for future use; not used after COD change
+    - `banners.js`, `analytics.js` — optional if present
+  - `schema.sql` — tables (users, tests, test_categories, bookings, booking_items, payments, banners, uploads)
+  - `seed.sql`, `scripts/seed.js` — test categories, tests, admin user
+
+Environment Variables
+- Backend (`server/.env`)
+  - `DATABASE_URL` — Postgres connection string (required)
+  - `PGSSLMODE` — set to `require` for cloud DBs or `disable` for local
+  - `CORS_ORIGINS` — comma-separated allowed origins (default includes localhost and Vercel)
+  - `DEFAULT_ADMIN_PASSWORD` — optional fallback to align admin hash by logging in once with this password
+  - Optional legacy:
+    - `UPI_VPA`, `UPI_NAME` — no longer used after COD-only policy
+- Frontend (`client/.env`)
+  - `REACT_APP_API_URL` — backend base URL; defaults to `/api` behind same-origin proxy
+  - `REACT_APP_GA_ID` — optional Google Analytics tag
+
+Running Locally
+1) Backend
+- `cd server && npm install && npm run dev`
+- Ensure Postgres is reachable with `DATABASE_URL`
+- Health check: `GET /api/health` returns `{ ok: true, db: true }` when DB is accessible
+2) Frontend
+- `cd client && npm install && npm start`
+- Default dev URLs: frontend `http://localhost:3000`, backend `http://localhost:5000`
+
+Data Model (key tables)
+- `users(id, name, email, password_hash, role, phone, token, created_at)`
+- `test_categories(id, name, slug)`
+- `tests(id, name, category_id, description, price, fasting, sample, active, created_at)`
+- `bookings(id, user_id, patient_name, age, gender, phone, email, address_* fields, collection_type, datetime, total, status, payment_method, payment_status, created_at)`
+- `booking_items(booking_id, test_id, price)`
+- `payments(id, user_id, booking_id, method, amount, status, utr, proof_url, upi_link, created_at, verified_at)` — retained for future online payments
+- `banners(id, title, subtitle, image_url, package_slug, active, created_at)`
+- `uploads(id, user_id, url, filename, created_at)`
+
+API Endpoints (selected)
+- Auth
+  - `POST /api/auth/register` → `{ token, user }`
+  - `POST /api/auth/login` → `{ token, user }`
+  - `GET /api/auth/me` (requires auth) → `{ user }`
+- Tests
+  - `GET /api/tests` → list tests
+  - `GET /api/tests/:id` → test details
+  - `POST /api/tests` (admin) → create
+  - `PUT /api/tests/:id` (admin) → update
+  - `DELETE /api/tests/:id` (admin) → delete
+- Bookings
+  - `GET /api/bookings` (auth) → user’s bookings; admin sees all
+  - `POST /api/bookings` (auth) → create booking; persists `booking_items`
+  - `PUT /api/bookings/:id/status` (admin) → update status
+  - `PUT /api/bookings/:id/cancel` (auth) → user cancels own booking
+- Uploads
+  - `POST /api/uploads` (auth) → multipart image upload; returns `{ imageUrl }`
+  - `GET /uploads/...` — served statically by backend
+- Payments (not used with COD-only)
+  - `POST /api/payments/initiate`, `POST /api/payments/confirm`, `PUT /api/payments/:id/verify` — retained for future
+
+Client Flows
+- Tests
+  - Browse and search; add tests to selection via `TestCard`
+- Booking (multi-step wizard)
+  - Step 1: Selected Tests — review and remove
+  - Step 2: Patient Details — name, age, gender, phone, email
+  - Step 3: Address — full address
+  - Step 4: Slot & Collection Type — date and time slot; `Home Collection` or `Lab Visit`
+  - Step 5: Payment — COD only; message indicates payment at collection
+  - Step 6: Review & Confirm — summary; submit creates booking and redirects to My Bookings
+- Auth
+  - Login/Register via `AuthContext`; token stored and applied to axios
+- My Bookings
+  - Lists bookings; guard rendering for DB shape; allows cancel via `PUT /bookings/:id/status` to `Cancelled`
+
+Admin Flows
+- Bookings
+  - Admin list of all bookings
+  - Status dropdown: Pending/In Progress/Completed/Cancelled
+  - Click to expand: patient, address, collection, payment details
+- Tests
+  - Create and delete tests; category, price, fasting flag, description
+- Banners (optional)
+  - CRUD if route is mounted; uploads via `/api/uploads`
+
+Deployment Notes
+- Frontend: `client/package.json` uses `react-scripts build`; `vercel.json` exists for Vercel deployment
+- Backend: expects `DATABASE_URL`; set `PGSSLMODE=require` for cloud DBs; configure `CORS_ORIGINS`
+- Admin password alignment:
+  - Set `DEFAULT_ADMIN_PASSWORD` on backend and log in once as `admin@lab.com` using that value; server updates the stored hash
+
+Known Gaps and Next Steps (for the next AI)
+- Booking detail API: add `GET /api/bookings/:id` joining `booking_items` to return test names and prices
+- Admin booking details: show test names and per-item prices from the new endpoint
+- Robust auth: migrate to JWT with expiry/refresh; remove legacy token storage if desired
+- Validation: strengthen server-side validation and normalize phone/email formats
+- Analytics: unify the optional analytics route and client calls
+- Payments: if online payments are needed later, re-enable UPI/Card and add proper verification flow
+- Accessibility: ensure forms and controls meet a11y standards and include ARIA attributes where useful
+- Error handling: consistent toasts/snackbars on client for failures
+- Rate limiting: basic rate limit on write endpoints
+- Logging: structured logs on backend for audit of status changes
+
 A full-stack web application for booking blood tests online with a React frontend and Express backend.
 
 ## Quick Start

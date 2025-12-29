@@ -14,6 +14,39 @@ export default function Admin() {
   const [error, setError] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [openBookingId, setOpenBookingId] = useState(null);
+  const [filters, setFilters] = useState({ status:'', collectionType:'', city:'', pincode:'', from:'', to:'' });
+  const [stats, setStats] = useState({ statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
+  const toCsv = (rows) => {
+    const headers = ['id','status','created_at','patient_name','phone','email','city','pincode','collection_type','datetime','total','payment_method','payment_status','user_id'];
+    const escape = (v) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      const needsQuote = /[",\n]/.test(s);
+      if (needsQuote) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    };
+    const lines = [headers.join(',')];
+    for (const r of rows) {
+      const line = [
+        r.id, r.status, r.created_at, r.patient_name, r.phone, r.email, r.city, r.pincode,
+        r.collection_type, r.datetime, r.total, r.payment_method, r.payment_status, (r.user_id ?? r.userId ?? '')
+      ].map(escape).join(',');
+      lines.push(line);
+    }
+    return lines.join('\n');
+  };
+  const exportCsv = () => {
+    const csv = toCsv(bookings || []);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g,'-');
+    a.href = url;
+    a.download = `bookings-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const fetchAll = useCallback(async () => {
     if (!user || user.role !== 'admin') {
@@ -21,15 +54,25 @@ export default function Admin() {
       return;
     }
     try {
-      const [bR, tR] = await Promise.all([api.get('/bookings'), api.get('/tests')]);
+      const [bR, tR] = await Promise.all([
+        api.get('/bookings', { params: {
+          status: filters.status || undefined,
+          collectionType: filters.collectionType || undefined,
+          city: filters.city || undefined,
+          pincode: filters.pincode || undefined,
+          from: filters.from || undefined,
+          to: filters.to || undefined
+        }}),
+        api.get('/tests')
+      ]);
       setBookings(bR.data); setTests(tR.data);
       setError(null);
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to load admin data.');
     }
-  }, [user]);
+  }, [user, filters]);
 
-  useEffect(()=> { fetchAll(); fetchBanners(); }, [fetchAll]);
+  useEffect(()=> { fetchAll(); fetchBanners(); fetchStats(); }, [fetchAll]);
   const updateStatus = async (id, status) => {
     try {
       await api.put(`/bookings/${id}/status`, { status });
@@ -37,6 +80,14 @@ export default function Admin() {
       setError(null);
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to update status');
+    }
+  };
+  const fetchStats = async () => {
+    try {
+      const r = await api.get('/bookings/stats');
+      setStats(r.data || { statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
+    } catch {
+      setStats({ statusCounts:{}, byDay:[], byWeek:[], slaBuckets:{} });
     }
   };
   const createTest = async () => {
@@ -220,9 +271,104 @@ export default function Admin() {
         <div>
           <h3>Bookings</h3>
           {error && <div className="error">{error}</div>}
+          <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:12, marginBottom:12}}>
+            <div className="card">
+              <div><strong>Total (7d)</strong></div>
+              <div className="muted small">Daily counts</div>
+              <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:8}}>
+                {(stats.byDay||[]).map(d => (
+                  <div key={String(d.date)} className="pill">{new Date(d.date).toLocaleDateString()} • {d.count}</div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div><strong>Status</strong></div>
+              <div className="muted small">Current counts</div>
+              <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:8}}>
+                {['Pending','In Progress','Completed','Cancelled'].map(s=>(
+                  <div key={s} className="pill">{s}: {stats.statusCounts?.[s] || 0}</div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div><strong>SLA (open)</strong></div>
+              <div className="muted small">Time since creation</div>
+              <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:8}}>
+                <div className="pill">{'<24h'}: {stats.slaBuckets?.lt24h || 0}</div>
+                <div className="pill">{'24–48h'}: {stats.slaBuckets?.['24to48h'] || 0}</div>
+                <div className="pill">{'>48h'}: {stats.slaBuckets?.gt48h || 0}</div>
+              </div>
+            </div>
+            <div className="card">
+              <div><strong>Weekly</strong></div>
+              <div className="muted small">Last 4 weeks</div>
+              <div style={{display:'flex', gap:8, flexWrap:'wrap', marginTop:8}}>
+                {(stats.byWeek||[]).map(w => (
+                  <div key={String(w.week)} className="pill">
+                    {new Date(w.week).toLocaleDateString()} • {w.count}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{marginBottom:12}}>
+            <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12, alignItems:'end'}}>
+              <div className="form-group">
+                <label className="small muted">Status</label>
+                <select value={filters.status} onChange={e=>setFilters(f=>({ ...f, status: e.target.value }))}>
+                  <option value="">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="small muted">Collection Type</label>
+                <select value={filters.collectionType} onChange={e=>setFilters(f=>({ ...f, collectionType: e.target.value }))}>
+                  <option value="">All</option>
+                  <option value="Home Collection">Home Collection</option>
+                  <option value="Lab Visit">Lab Visit</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="small muted">City</label>
+                <input value={filters.city} onChange={e=>setFilters(f=>({ ...f, city: e.target.value }))} placeholder="City" />
+              </div>
+              <div className="form-group">
+                <label className="small muted">Pincode</label>
+                <input value={filters.pincode} onChange={e=>setFilters(f=>({ ...f, pincode: e.target.value }))} placeholder="Pincode" />
+              </div>
+              <div className="form-group">
+                <label className="small muted">From</label>
+                <input type="date" value={filters.from} onChange={e=>setFilters(f=>({ ...f, from: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="small muted">To</label>
+                <input type="date" value={filters.to} onChange={e=>setFilters(f=>({ ...f, to: e.target.value }))} />
+              </div>
+            </div>
+            <div className="filters-actions" style={{marginTop:8}}>
+              <button className="btn" onClick={fetchAll}>Apply</button>
+              <button className="btn outline" style={{marginLeft:8}} onClick={()=>setFilters({ status:'', collectionType:'', city:'', pincode:'', from:'', to:'' })}>Reset</button>
+              <button className="btn outline" style={{marginLeft:8}} onClick={exportCsv}>Export CSV</button>
+            </div>
+          </div>
           {(bookings||[]).map(b=>(
             <div key={b.id} className="card" style={{cursor:'pointer'}} onClick={()=>setOpenBookingId(openBookingId===b.id?null:b.id)}>
-              <div><strong>ID {b.id}</strong> — {b.status}</div>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:8}}>
+                <div><strong>ID {b.id}</strong> — {b.status}</div>
+                <div className="muted small">
+                  {(() => {
+                    const created = b.created_at ? new Date(b.created_at) : null;
+                    if (!created) return null;
+                    const ms = Date.now() - created.getTime();
+                    const h = Math.floor(ms/3600000);
+                    const badge = h < 24 ? '<24h' : h < 48 ? '24–48h' : '>48h';
+                    return <span className="pill">{badge}</span>;
+                  })()}
+                </div>
+              </div>
               <div>User: {b.user_id || b.userId || '—'} • Total: ${Number(b.total||0).toFixed(2)}</div>
               {openBookingId===b.id && (
                 <div style={{marginTop:10}}>

@@ -136,6 +136,13 @@ code {
   gap: 16px;
   margin-top: 12px;
 }
+ 
+.filters-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
 
 /* Buttons / pills */
 .btn {

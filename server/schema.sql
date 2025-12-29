@@ -68,6 +68,16 @@ CREATE TABLE IF NOT EXISTS booking_items (
 );
 CREATE INDEX IF NOT EXISTS idx_booking_items_booking ON booking_items(booking_id);
 
+-- Booking Notes (admin internal notes)
+CREATE TABLE IF NOT EXISTS booking_notes (
+  id SERIAL PRIMARY KEY,
+  booking_id INTEGER REFERENCES bookings(id) ON DELETE CASCADE,
+  admin_id INTEGER REFERENCES users(id),
+  note TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_booking_notes_booking ON booking_notes(booking_id, created_at);
+
 -- Payments
 CREATE TABLE IF NOT EXISTS payments (
   id SERIAL PRIMARY KEY,
