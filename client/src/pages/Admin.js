@@ -173,14 +173,15 @@ export default function Admin() {
     }
   };
   const startEditBanner = (b) => {
+    // Handle both camelCase and lowercase field names from database
     setEditingBannerId(b.id);
     setBannerForm({
       title: b.title || '',
       subtitle: b.subtitle || '',
-      imageUrl: b.imageUrl || '',
-      testId: b.testId || '',
-      packageSlug: b.packageSlug || '',
-      isActive: b.isActive !== undefined ? b.isActive : true
+      imageUrl: b.imageUrl || b.imageurl || '',
+      testId: b.testId || b.testid || '',
+      packageSlug: b.packageSlug || b.packageslug || '',
+      isActive: b.isActive !== undefined ? b.isActive : (b.active !== undefined ? b.active : true)
     });
   };
   const saveBanner = async () => {
@@ -359,25 +360,32 @@ export default function Admin() {
           <div style={{marginTop:12}}>
             {banners.length === 0 ? <div className="muted">No banners yet.</div> :
               <div className="grid">
-                {banners.map(b => (
-                  <div key={b.id} className="card">
-                    <div style={{marginBottom:8}}>
-                      {b.imageUrl && <img src={b.imageUrl} alt={b.title} style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} onError={(e) => console.error('Banner image error:', b.imageUrl, e)} />}
-                    </div>
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-                      <div style={{flex:1}}>
-                        <strong>{b.title}</strong>
-                        <div className="muted small">{b.subtitle}</div>
-                        <div className="muted small">Link: {b.testId ? `Test ${b.testId}` : (b.packageSlug || '—')}</div>
-                        <div className="muted small" style={{fontSize:'11px', marginTop:4, wordBreak:'break-all'}}>Image: {b.imageUrl || '—'}</div>
+                {banners.map(b => {
+                  // Handle both camelCase and lowercase field names from database
+                  const imageUrl = b.imageUrl || b.imageurl || '';
+                  const testId = b.testId || b.testid || '';
+                  const packageSlug = b.packageSlug || b.packageslug || '';
+                  
+                  return (
+                    <div key={b.id} className="card">
+                      <div style={{marginBottom:8}}>
+                        {imageUrl && <img src={imageUrl} alt={b.title} style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} onError={(e) => console.error('Banner image error:', imageUrl, e)} />}
                       </div>
-                      <div style={{whiteSpace:'nowrap', marginLeft:8}}>
-                        <button className="btn outline" onClick={()=>startEditBanner(b)}>Edit</button>
-                        <button className="btn pill danger" style={{marginLeft:8}} onClick={()=>deactivateBanner(b.id)}>Deactivate</button>
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                        <div style={{flex:1}}>
+                          <strong>{b.title}</strong>
+                          <div className="muted small">{b.subtitle}</div>
+                          <div className="muted small">Link: {testId ? `Test ${testId}` : (packageSlug || '—')}</div>
+                          <div className="muted small" style={{fontSize:'11px', marginTop:4, wordBreak:'break-all'}}>Image: {imageUrl || '—'}</div>
+                        </div>
+                        <div style={{whiteSpace:'nowrap', marginLeft:8}}>
+                          <button className="btn outline" onClick={()=>startEditBanner(b)}>Edit</button>
+                          <button className="btn pill danger" style={{marginLeft:8}} onClick={()=>deactivateBanner(b.id)}>Deactivate</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             }
           </div>

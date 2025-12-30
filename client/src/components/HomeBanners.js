@@ -15,8 +15,12 @@ export default function HomeBanners({ banners = [] }) {
   };
   
   const handleClick = (b) => {
-    if (b.testId) nav(`/tests/${b.testId}`);
-    else if (b.packageSlug) nav(`/tests?package=${encodeURIComponent(b.packageSlug)}`);
+    // Handle both camelCase and lowercase field names
+    const testId = b.testId || b.testid;
+    const packageSlug = b.packageSlug || b.packageslug;
+    
+    if (testId) nav(`/tests/${testId}`);
+    else if (packageSlug) nav(`/tests?package=${encodeURIComponent(packageSlug)}`);
     else nav('/tests');
   };
 
@@ -26,29 +30,36 @@ export default function HomeBanners({ banners = [] }) {
 
   return (
     <div className="banner-grid">
-      {banners.map(b => (
-        <button key={b.id} className="banner-card card" onClick={() => handleClick(b)} aria-label={b.title}>
-          <div className="banner-media">
-            {b.imageUrl ? (
-              <img 
-                src={getImageUrl(b.imageUrl)} 
-                alt={b.title}
-                loading="lazy"
-                width="640"
-                height="280"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={(e) => console.log('Image load error:', b.imageUrl, getImageUrl(b.imageUrl), e)}
-              />
-            ) : (
-              <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(14,165,233,0.08))' }} />
-            )}
-          </div>
-          <div className="banner-body">
-            <h4 style={{margin:0}}>{b.title}</h4>
-            {b.subtitle && <div className="muted small">{b.subtitle}</div>}
-          </div>
-        </button>
-      ))}
+      {banners.map(b => {
+        // Handle both camelCase and lowercase field names from database
+        const imageUrl = b.imageUrl || b.imageurl || '';
+        const title = b.title || '';
+        const subtitle = b.subtitle || '';
+        
+        return (
+          <button key={b.id} className="banner-card card" onClick={() => handleClick(b)} aria-label={title}>
+            <div className="banner-media">
+              {imageUrl ? (
+                <img 
+                  src={getImageUrl(imageUrl)} 
+                  alt={title}
+                  loading="lazy"
+                  width="640"
+                  height="280"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => console.log('Image load error:', imageUrl, getImageUrl(imageUrl), e)}
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(14,165,233,0.08))' }} />
+              )}
+            </div>
+            <div className="banner-body">
+              <h4 style={{margin:0}}>{title}</h4>
+              {subtitle && <div className="muted small">{subtitle}</div>}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
