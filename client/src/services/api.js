@@ -14,8 +14,10 @@ export function getApiRoot() {
   if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.startsWith('http')) {
     try {
       const u = new URL(process.env.REACT_APP_API_URL);
+      console.log('getApiRoot: Using REACT_APP_API_URL:', `${u.protocol}//${u.host}`);
       return `${u.protocol}//${u.host}`;
     } catch {
+      console.log('getApiRoot: URL parse failed, using:', process.env.REACT_APP_API_URL);
       return process.env.REACT_APP_API_URL;
     }
   }
@@ -25,13 +27,23 @@ export function getApiRoot() {
   if (url.startsWith('http')) {
     try {
       const u = new URL(url);
+      console.log('getApiRoot: Using axios baseURL:', `${u.protocol}//${u.host}`);
       return `${u.protocol}//${u.host}`;
     } catch {
+      console.log('getApiRoot: URL parse failed, using:', url);
       return url;
     }
   }
   
+  // Hardcoded fallback for Vercel production
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    const backendUrl = 'https://bookmybloodtest.onrender.com';
+    console.log('getApiRoot: Vercel detected, using hardcoded backend:', backendUrl);
+    return backendUrl;
+  }
+  
   // For relative paths, use current origin (works in dev)
+  console.log('getApiRoot: Using window.location.origin:', window.location.origin);
   return window.location.origin;
 }
 
