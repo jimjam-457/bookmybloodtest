@@ -1,67 +1,38 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import api, { getApiRoot } from '../services/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function HealthPackages() {
   const canonical = 'https://bookmybloodtest.vercel.app/health-packages';
   const nav = useNavigate();
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const packages = [
-    {
-      id: 'thyroid-panel',
-      icon: '🦋',
-      title: 'Thyroid Panel',
-      price: '₹3999',
-      description: 'Complete thyroid health assessment',
-      tests: ['TSH', 'Free T3', 'Free T4', 'TPO Antibodies'],
-      best_for: 'Monitoring thyroid health and hormone levels'
-    },
-    {
-      id: 'diabetes-screening',
-      icon: '📊',
-      title: 'Diabetes Screening',
-      price: '₹2999',
-      description: 'Detect and monitor diabetes risk',
-      tests: ['Fasting Glucose', 'HbA1c', 'Post-Meal Glucose'],
-      best_for: 'Early detection and diabetes risk assessment'
-    },
-    {
-      id: 'cardiac-health',
-      icon: '❤️',
-      title: 'Cardiac Health',
-      price: '₹5499',
-      description: 'Comprehensive heart health check',
-      tests: ['Lipid Profile', 'Troponin', 'BNP'],
-      best_for: 'Heart disease prevention and assessment'
-    },
-    {
-      id: 'liver-function',
-      icon: '🫘',
-      title: 'Liver Function',
-      price: '₹4199',
-      description: 'Complete liver health evaluation',
-      tests: ['Bilirubin', 'ALT/AST', 'Albumin', 'Proteins'],
-      best_for: 'Liver health and detoxification check'
-    },
-    {
-      id: 'kidney-function',
-      icon: '💧',
-      title: 'Kidney Function',
-      price: '₹3299',
-      description: 'Assess kidney health and function',
-      tests: ['Creatinine', 'BUN', 'Electrolytes'],
-      best_for: 'Kidney function and renal health'
-    },
-    {
-      id: 'full-body-checkup',
-      icon: '✨',
-      title: 'Full Body Checkup',
-      price: '₹9999',
-      description: 'Complete health assessment',
-      tests: ['50+ Parameters', 'All Major Systems', 'Complete Report'],
-      best_for: 'Annual health screening and wellness'
-    }
-  ];
+  useEffect(() => {
+    let mounted = true;
+    api.get('/health-packages')
+      .then(res => {
+        if (mounted) {
+          console.log('Packages received:', res.data);
+          setPackages(res.data);
+        }
+      })
+      .catch(e => {
+        console.error('Error fetching packages:', e);
+        if (mounted) setPackages([]);
+      })
+      .finally(() => mounted && setLoading(false));
+    
+    return () => mounted = false;
+  }, []);
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return getApiRoot() + imagePath;
+  };
 
   return (
     <div className="container">
@@ -79,55 +50,57 @@ export default function HealthPackages() {
         <p style={{color:'#6b7280', fontSize:'16px', maxWidth:'600px', margin:0}}>Choose from our scientifically designed health packages tailored for prevention and early detection.</p>
       </div>
 
-      <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))'}}>
-        {packages.map(pkg => (
-          <div key={pkg.id} className="card" style={{display:'flex', flexDirection:'column'}}>
-            <div style={{fontSize:'40px', marginBottom:'12px'}}>{pkg.icon}</div>
-            <h3 style={{margin:'0 0 8px 0', color:'#0369a1', fontWeight:'700', fontSize:'18px'}}>{pkg.title}</h3>
-            <p style={{margin:'0 0 12px 0', color:'#6b7280', fontSize:'14px'}}>{pkg.description}</p>
-            
-            <div style={{
-              margin:'12px 0',
-              padding:'12px',
-              background:'rgba(3, 105, 161, 0.05)',
-              borderRadius:'10px',
-              textAlign:'center'
-            }}>
-              <div style={{fontSize:'24px', fontWeight:'800', color:'#0369a1'}}>{pkg.price}</div>
-              <div style={{fontSize:'12px', color:'#6b7280', marginTop:'4px'}}>Inclusive all tests</div>
-            </div>
+      {loading ? (
+        <LoadingSpinner message="Loading packages..." />
+      ) : packages.length === 0 ? (
+        <div className="muted">No health packages available at the moment.</div>
+      ) : (
+        <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))'}}>
+          {packages.map(pkg => (
+            <div key={pkg.id} className="card" style={{display:'flex', flexDirection:'column', cursor:'pointer', transition:'all 0.3s ease'}} onClick={() => nav(`/health-packages/${pkg.slug}`)}>
+              <div style={{fontSize:'40px', marginBottom:'12px'}}>{pkg.icon || '💊'}</div>
+              {pkg.imageUrl && (
+                <div style={{marginBottom:'12px', borderRadius:'8px', overflow:'hidden', maxHeight:'150px'}}>
+                  <img 
+                    src={getImageUrl(pkg.imageUrl)} 
+                    alt={pkg.title}
+                    style={{width:'100%', height:'150px', objectFit:'cover'}}
+                    onError={(e) => console.log('Image error:', pkg.imageUrl)}
+                  />
+                </div>
+              )}
+              <h3 style={{margin:'0 0 8px 0', color:'#0369a1', fontWeight:'700', fontSize:'18px'}}>{pkg.title}</h3>
+              <p style={{margin:'0 0 12px 0', color:'#6b7280', fontSize:'14px', flex:1}}>{pkg.description}</p>
+              
+              <div style={{
+                margin:'12px 0',
+                padding:'12px',
+                background:'rgba(3, 105, 161, 0.05)',
+                borderRadius:'10px',
+                textAlign:'center'
+              }}>
+                <div style={{fontSize:'24px', fontWeight:'800', color:'#0369a1'}}>₹{pkg.price.toFixed(0)}</div>
+                <div style={{fontSize:'12px', color:'#6b7280', marginTop:'4px'}}>Inclusive all tests</div>
+              </div>
 
-            <div style={{marginBottom:'12px', flex:1}}>
-              <strong style={{fontSize:'13px', color:'#001d3d', display:'block', marginBottom:'8px'}}>Includes:</strong>
-              <ul style={{margin:0, paddingLeft:'20px', fontSize:'13px', color:'#6b7280', lineHeight:'1.6'}}>
-                {pkg.tests.map((test, idx) => (
-                  <li key={idx}>{test}</li>
-                ))}
-              </ul>
-            </div>
+              {pkg.bestFor && (
+                <div style={{
+                  padding:'10px 12px',
+                  background:'#f0f9ff',
+                  borderRadius:'8px',
+                  fontSize:'12px',
+                  color:'#0369a1',
+                  textAlign:'center'
+                }}>
+                  <strong>Best for:</strong> {pkg.bestFor}
+                </div>
+              )}
 
-            <div style={{
-              padding:'10px 12px',
-              background:'#f0f9ff',
-              borderRadius:'8px',
-              marginBottom:'12px',
-              fontSize:'12px',
-              color:'#0369a1',
-              textAlign:'center'
-            }}>
-              <strong>Best for:</strong> {pkg.best_for}
+              <button className="btn" style={{marginTop:'12px', width:'100%'}}>View Details</button>
             </div>
-
-            <button 
-              className="btn"
-              onClick={() => nav(`/blood-tests?category=${pkg.id}`)}
-              style={{width:'100%', marginTop:'auto'}}
-            >
-              View Tests
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div style={{marginTop:40, padding:'32px', borderRadius:'20px', background:'linear-gradient(135deg, rgba(3,105,161,0.08) 0%, rgba(6,182,212,0.04) 100%)', border:'1px solid rgba(3, 105, 161, 0.1)', textAlign:'center'}}>
         <h2 style={{margin:'0 0 16px 0', color:'#001d3d', fontWeight:'800'}}>Questions About Our Packages?</h2>

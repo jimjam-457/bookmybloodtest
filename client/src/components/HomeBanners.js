@@ -19,9 +19,14 @@ export default function HomeBanners({ banners = [] }) {
     const testId = b.testId || b.testid;
     const packageSlug = b.packageSlug || b.packageslug;
     
-    if (testId) nav(`/tests/${testId}`);
-    else if (packageSlug) nav(`/tests?package=${encodeURIComponent(packageSlug)}`);
-    else nav('/tests');
+    // Prefer package link over test link
+    if (packageSlug) {
+      nav(`/health-packages/${packageSlug}`);
+    } else if (testId) {
+      nav(`/tests/${testId}`);
+    } else {
+      nav('/tests');
+    }
   };
 
   if (!banners || banners.length === 0) {

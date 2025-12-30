@@ -108,6 +108,12 @@ try {
     // console.debug('banners route not mounted:', err.message);
   }
   try {
+    const healthPackagesRoutes = require('./routes/health-packages');
+    app.use('/api/health-packages', healthPackagesRoutes);
+  } catch (err) {
+    // health-packages route may not exist yet
+  }
+  try {
     const analyticsRoutes = require('./routes/analytics');
     app.use('/api/analytics', analyticsRoutes);
   } catch (err) {

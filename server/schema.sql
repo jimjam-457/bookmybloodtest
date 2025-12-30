@@ -106,6 +106,30 @@ CREATE TABLE IF NOT EXISTS banners (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Health Packages
+CREATE TABLE IF NOT EXISTS health_packages (
+  id SERIAL PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  price NUMERIC(10,2) NOT NULL DEFAULT 0,
+  icon TEXT,
+  image_url TEXT,
+  best_for TEXT,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_health_packages_slug ON health_packages(slug);
+CREATE INDEX IF NOT EXISTS idx_health_packages_active ON health_packages(active);
+
+-- Health Package Tests (junction table)
+CREATE TABLE IF NOT EXISTS health_package_tests (
+  package_id INTEGER REFERENCES health_packages(id) ON DELETE CASCADE,
+  test_id INTEGER REFERENCES tests(id),
+  PRIMARY KEY (package_id, test_id)
+);
+CREATE INDEX IF NOT EXISTS idx_health_package_tests_package ON health_package_tests(package_id);
+
 -- Uploads
 CREATE TABLE IF NOT EXISTS uploads (
   id SERIAL PRIMARY KEY,
