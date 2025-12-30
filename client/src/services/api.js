@@ -10,14 +10,29 @@ export function setAuthToken(token) {
 }
 
 export function getApiRoot() {
-  const url = api.defaults.baseURL || '';
-  if (url.startsWith('/')) return window.location.origin;
-  try {
-    const u = new URL(url);
-    return `${u.protocol}//${u.host}`;
-  } catch {
-    return window.location.origin;
+  // If REACT_APP_API_URL is explicitly set (production), use it to get the backend origin
+  if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.startsWith('http')) {
+    try {
+      const u = new URL(process.env.REACT_APP_API_URL);
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return process.env.REACT_APP_API_URL;
+    }
   }
+  
+  // Fall back to axios baseURL
+  const url = api.defaults.baseURL || '';
+  if (url.startsWith('http')) {
+    try {
+      const u = new URL(url);
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return url;
+    }
+  }
+  
+  // For relative paths, use current origin (works in dev)
+  return window.location.origin;
 }
 
 

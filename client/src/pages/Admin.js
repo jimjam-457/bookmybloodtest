@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import api from '../services/api';
+import api, { getApiRoot } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -228,19 +228,12 @@ export default function Admin() {
       const resp = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Get the relative path from response
+      // Get the relative path from response (e.g., /uploads/filename.jpg)
       const relativePath = resp.data.imageUrl;
-      // Build full URL using the API's base URL
-      const apiUrl = api.defaults.baseURL || '/api';
-      let imageUrl;
-      if (apiUrl.startsWith('http')) {
-        // Full URL like https://api.example.com/api
-        imageUrl = apiUrl.replace('/api', '') + relativePath;
-      } else {
-        // Relative path like /api - use current origin
-        imageUrl = window.location.origin + relativePath;
-      }
-      console.log('Image uploaded. Relative:', relativePath, 'Full URL:', imageUrl);
+      // Build full URL using the actual backend origin
+      const backendRoot = getApiRoot();
+      const imageUrl = backendRoot + relativePath;
+      console.log('Image uploaded. Relative:', relativePath, 'Backend:', backendRoot, 'Full URL:', imageUrl);
       setBannerForm({ ...bannerForm, imageUrl });
       setError(null);
     } catch (e) {

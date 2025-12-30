@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { getApiRoot } from '../services/api';
 
 export default function HomeBanners({ banners = [] }) {
   const nav = useNavigate();
@@ -10,14 +10,8 @@ export default function HomeBanners({ banners = [] }) {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) return imagePath; // Already a full URL
     
-    const apiUrl = api.defaults.baseURL || '/api';
-    if (apiUrl.startsWith('http')) {
-      // Full backend URL like https://api.example.com/api
-      return apiUrl.replace('/api', '') + imagePath;
-    } else {
-      // Relative like /api - use current origin
-      return window.location.origin + imagePath;
-    }
+    // If relative path, prepend backend root
+    return getApiRoot() + imagePath;
   };
   
   const handleClick = (b) => {
