@@ -8,10 +8,14 @@ export default function Admin() {
   const [bookings, setBookings] = useState([]);
   const [tests, setTests] = useState([]);
   const [newTest, setNewTest] = useState({ name:'', description:'', price:0, fasting:false, sample:'Blood', category:'' });
-  const [view, setView] = useState('bookings'); // 'bookings' | 'tests' | 'banners'
+  const [view, setView] = useState('bookings'); // 'bookings' | 'tests' | 'banners' | 'health-packages'
   const [banners, setBanners] = useState([]);
   const [bannerForm, setBannerForm] = useState({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
   const [editingBannerId, setEditingBannerId] = useState(null);
+  const [healthPackages, setHealthPackages] = useState([]);
+  const [packageForm, setPackageForm] = useState({ slug:'', title:'', description:'', price:0, icon:'💊', imageUrl:'', bestFor:'', testIds:[] });
+  const [editingPackageId, setEditingPackageId] = useState(null);
+  const [loadingPackages, setLoadingPackages] = useState(false);
   const [error, setError] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [openBookingId, setOpenBookingId] = useState(null);
@@ -87,7 +91,7 @@ export default function Admin() {
     }
   }, [user, filters]);
 
-  useEffect(()=> { fetchAll(); fetchBanners(); fetchStats(); }, [fetchAll]);
+  useEffect(()=> { fetchAll(); fetchBanners(); fetchStats(); fetchHealthPackages(); }, [fetchAll]);
   const updateStatus = async (id, status) => {
     try {
       await api.put(`/bookings/${id}/status`, { status });
@@ -118,6 +122,74 @@ export default function Admin() {
     } finally {
       setLoadingBanners(false);
     }
+  };
+  const fetchHealthPackages = async () => {
+    setLoadingPackages(true);
+    try {
+      const r = await api.get('/health-packages');
+      setHealthPackages(r.data);
+      setError(null);
+    } catch (e) {
+      console.error('Error fetching packages:', e);
+      setHealthPackages([]);
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+  const createHealthPackage = async () => {
+    if (!packageForm.slug || !packageForm.title) {
+      setError('Slug and title are required');
+      return;
+    }
+    try {
+      await api.post('/health-packages', packageForm);
+      setPackageForm({ slug:'', title:'', description:'', price:0, icon:'💊', imageUrl:'', bestFor:'', testIds:[] });
+      setEditingPackageId(null);
+      fetchHealthPackages();
+      setError(null);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to create package');
+    }
+  };
+  const updateHealthPackage = async () => {
+    if (!editingPackageId) return createHealthPackage();
+    if (!packageForm.title) {
+      setError('Title is required');
+      return;
+    }
+    try {
+      await api.put(`/health-packages/${editingPackageId}`, packageForm);
+      setPackageForm({ slug:'', title:'', description:'', price:0, icon:'💊', imageUrl:'', bestFor:'', testIds:[] });
+      setEditingPackageId(null);
+      fetchHealthPackages();
+      setError(null);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to update package');
+    }
+  };
+  const deleteHealthPackage = async (id) => {
+    // eslint-disable-next-line no-restricted-globals
+    if (!confirm('Delete this package?')) return;
+    try {
+      await api.delete(`/health-packages/${id}`);
+      fetchHealthPackages();
+      setError(null);
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to delete package');
+    }
+  };
+  const startEditPackage = (pkg) => {
+    setEditingPackageId(pkg.id);
+    setPackageForm({
+      slug: pkg.slug || '',
+      title: pkg.title || '',
+      description: pkg.description || '',
+      price: pkg.price || 0,
+      icon: pkg.icon || '💊',
+      imageUrl: pkg.imageUrl || '',
+      bestFor: pkg.bestFor || '',
+      testIds: [] // Will be fetched when loading package details
+    });
   };
   const createTest = async () => {
     if (!user || user.role !== 'admin') { setError('Admin access required to create tests'); return; }
@@ -315,6 +387,7 @@ export default function Admin() {
         <button className={`pill ${view==='bookings'?'active':''}`} onClick={()=>setView('bookings')}>Bookings</button>
         <button className={`pill ${view==='tests'?'active':''}`} onClick={()=>setView('tests')}>Tests</button>
         <button className={`pill ${view==='banners'?'active':''}`} onClick={()=>setView('banners')}>Banners</button>
+        <button className={`pill ${view==='health-packages'?'active':''}`} onClick={()=>setView('health-packages')}>Health Packages</button>
       </div>
 
       {view === 'banners' && (
@@ -637,6 +710,80 @@ export default function Admin() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {view === 'health-packages' && (
+        <div>
+          <h3>Manage Health Packages</h3>
+          {error && <div className="error" style={{marginBottom:12, padding:8, background:'#fee2e2', color:'#991b1b', borderRadius:4}}>{error}</div>}
+          {loadingPackages && <LoadingSpinner message="Loading packages..." />}
+          <div className="card">
+            <div className="form">
+              <input placeholder="Package Slug (e.g., thyroid-panel)" value={packageForm.slug} onChange={e=>setPackageForm({...packageForm, slug:e.target.value})} disabled={editingPackageId ? true : false} />
+              <input placeholder="Title" value={packageForm.title} onChange={e=>setPackageForm({...packageForm, title:e.target.value})} />
+              <input placeholder="Description" value={packageForm.description} onChange={e=>setPackageForm({...packageForm, description:e.target.value})} />
+              <input placeholder="Price" type="number" value={packageForm.price} onChange={e=>setPackageForm({...packageForm, price:parseFloat(e.target.value)||0})} />
+              <input placeholder="Icon/Emoji" value={packageForm.icon} onChange={e=>setPackageForm({...packageForm, icon:e.target.value})} />
+              <input placeholder="Best For" value={packageForm.bestFor} onChange={e=>setPackageForm({...packageForm, bestFor:e.target.value})} />
+              
+              <div style={{marginBottom:12}}>
+                <label style={{display:'block', marginBottom:6}}>Upload Image:</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage}
+                  style={{padding:8}}
+                />
+                {uploadingImage && <div className="muted small">Uploading...</div>}
+              </div>
+
+              {packageForm.imageUrl && (
+                <div style={{marginBottom:12}}>
+                  <label style={{display:'block', marginBottom:6}}>Preview:</label>
+                  <img src={packageForm.imageUrl} alt="preview" style={{maxWidth:'100%', maxHeight:120, borderRadius:4}} onError={(e) => console.error('Preview error:', packageForm.imageUrl, e)} />
+                  <div className="muted small" style={{marginTop:4}}>URL: {packageForm.imageUrl}</div>
+                </div>
+              )}
+
+              <input placeholder="Test IDs (comma-separated, e.g., 1,2,3)" value={packageForm.testIds.join(',')} onChange={e=>setPackageForm({...packageForm, testIds:e.target.value.split(',').map(t=>parseInt(t)).filter(t=>!isNaN(t))})} />
+              
+              <div style={{marginTop:8}}>
+                <button className="btn" onClick={updateHealthPackage}>{editingPackageId ? 'Save Changes' : 'Add Package'}</button>
+                {editingPackageId && <button className="btn outline" style={{marginLeft:8}} onClick={()=>{ setEditingPackageId(null); setPackageForm({ slug:'', title:'', description:'', price:0, icon:'💊', imageUrl:'', bestFor:'', testIds:[] }); }}>Cancel</button>}
+              </div>
+            </div>
+          </div>
+
+          <div style={{marginTop:12}}>
+            {healthPackages.length === 0 ? <div className="muted">No packages yet.</div> :
+              <div className="grid">
+                {healthPackages.map(pkg => {
+                  const imageUrl = pkg.imageUrl || pkg.imageurl || '';
+                  return (
+                    <div key={pkg.id} className="card">
+                      <div style={{marginBottom:8}}>
+                        {imageUrl && <img src={imageUrl} alt={pkg.title} style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} onError={(e) => console.error('Package image error:', imageUrl, e)} />}
+                      </div>
+                      <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                        <div style={{flex:1}}>
+                          <strong>{pkg.icon} {pkg.title}</strong>
+                          <div className="muted small">{pkg.description}</div>
+                          <div className="muted small">Price: ₹{pkg.price?.toFixed(0) || '0'}</div>
+                          <div className="muted small" style={{fontSize:'11px', marginTop:4, wordBreak:'break-all'}}>Slug: {pkg.slug}</div>
+                        </div>
+                        <div style={{whiteSpace:'nowrap', marginLeft:8}}>
+                          <button className="btn outline" onClick={()=>startEditPackage(pkg)}>Edit</button>
+                          <button className="btn pill danger" style={{marginLeft:8}} onClick={()=>deleteHealthPackage(pkg.id)}>Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            }
           </div>
         </div>
       )}
