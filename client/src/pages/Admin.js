@@ -228,11 +228,20 @@ export default function Admin() {
       const resp = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Store only the relative path in the form (e.g., /uploads/filename.jpg)
-      // This gets saved to database and the browser resolves it based on current origin
-      const relativeImageUrl = resp.data.imageUrl;
-      console.log('Image uploaded:', relativeImageUrl);
-      setBannerForm({ ...bannerForm, imageUrl: relativeImageUrl });
+      // Get the relative path from response
+      const relativePath = resp.data.imageUrl;
+      // Build full URL using the API's base URL
+      const apiUrl = api.defaults.baseURL || '/api';
+      let imageUrl;
+      if (apiUrl.startsWith('http')) {
+        // Full URL like https://api.example.com/api
+        imageUrl = apiUrl.replace('/api', '') + relativePath;
+      } else {
+        // Relative path like /api - use current origin
+        imageUrl = window.location.origin + relativePath;
+      }
+      console.log('Image uploaded. Relative:', relativePath, 'Full URL:', imageUrl);
+      setBannerForm({ ...bannerForm, imageUrl });
       setError(null);
     } catch (e) {
       console.error('Upload error:', e);
