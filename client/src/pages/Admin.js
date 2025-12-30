@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import api, { getApiRoot } from '../services/api';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -144,16 +144,32 @@ export default function Admin() {
   };
 
   const createBanner = async () => {
+    if (!bannerForm.title) {
+      setError('Title is required');
+      return;
+    }
+    if (!bannerForm.imageUrl) {
+      setError('Please upload an image');
+      return;
+    }
     try {
       console.log('Creating banner with data:', { ...bannerForm, testId: bannerForm.testId || null, packageSlug: bannerForm.packageSlug || null });
-      const resp = await api.post('/banners', { ...bannerForm, testId: bannerForm.testId || null, packageSlug: bannerForm.packageSlug || null });
+      const resp = await api.post('/banners', { 
+        title: bannerForm.title,
+        subtitle: bannerForm.subtitle || '',
+        imageUrl: bannerForm.imageUrl,
+        testId: bannerForm.testId || null,
+        packageSlug: bannerForm.packageSlug || null,
+        isActive: true
+      });
       console.log('Banner created response:', resp.data);
       setBannerForm({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
       setEditingBannerId(null);
+      setError(null);
       fetchBanners();
     } catch(e) { 
       console.error('Banner creation error:', e.response?.data);
-      alert('Failed to create banner: ' + (e.response?.data?.message || e.message)); 
+      setError('Failed to create banner: ' + (e.response?.data?.message || e.message)); 
     }
   };
   const startEditBanner = (b) => {
@@ -169,19 +185,27 @@ export default function Admin() {
   };
   const saveBanner = async () => {
     if (!editingBannerId) return createBanner();
+    if (!bannerForm.title) {
+      setError('Title is required');
+      return;
+    }
     try {
       const resp = await api.put(`/banners/${editingBannerId}`, { 
-        ...bannerForm, 
-        testId: bannerForm.testId || null, 
-        packageSlug: bannerForm.packageSlug || null 
+        title: bannerForm.title,
+        subtitle: bannerForm.subtitle || '',
+        imageUrl: bannerForm.imageUrl,
+        testId: bannerForm.testId || null,
+        packageSlug: bannerForm.packageSlug || null,
+        active: bannerForm.isActive
       });
       console.log('Banner updated response:', resp.data);
       setBannerForm({ title:'', subtitle:'', imageUrl:'', testId:'', packageSlug:'', isActive:true });
       setEditingBannerId(null);
+      setError(null);
       fetchBanners();
     } catch(e) {
       console.error('Banner update error:', e.response?.data);
-      alert('Failed to update banner: ' + (e.response?.data?.message || e.message));
+      setError('Failed to update banner: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -204,10 +228,11 @@ export default function Admin() {
       const resp = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      // Build full image URL based on API root
-      const imageUrl = `${getApiRoot()}${resp.data.imageUrl}`;
-      console.log('Image uploaded:', imageUrl);
-      setBannerForm({ ...bannerForm, imageUrl });
+      // Store only the relative path in the form (e.g., /uploads/filename.jpg)
+      // This gets saved to database and the browser resolves it based on current origin
+      const relativeImageUrl = resp.data.imageUrl;
+      console.log('Image uploaded:', relativeImageUrl);
+      setBannerForm({ ...bannerForm, imageUrl: relativeImageUrl });
       setError(null);
     } catch (e) {
       console.error('Upload error:', e);
@@ -314,7 +339,8 @@ export default function Admin() {
               {bannerForm.imageUrl && (
                 <div style={{marginBottom:12}}>
                   <label style={{display:'block', marginBottom:6}}>Preview:</label>
-                  <img src={bannerForm.imageUrl} alt="preview" style={{maxWidth:'100%', maxHeight:120, borderRadius:4}} />
+                  <img src={bannerForm.imageUrl} alt="preview" style={{maxWidth:'100%', maxHeight:120, borderRadius:4}} onError={(e) => console.error('Preview error:', bannerForm.imageUrl, e)} />
+                  <div className="muted small" style={{marginTop:4}}>URL: {bannerForm.imageUrl}</div>
                 </div>
               )}
 
@@ -333,13 +359,17 @@ export default function Admin() {
               <div className="grid">
                 {banners.map(b => (
                   <div key={b.id} className="card">
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                      <div>
+                    <div style={{marginBottom:8}}>
+                      {b.imageUrl && <img src={b.imageUrl} alt={b.title} style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} onError={(e) => console.error('Banner image error:', b.imageUrl, e)} />}
+                    </div>
+                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
+                      <div style={{flex:1}}>
                         <strong>{b.title}</strong>
                         <div className="muted small">{b.subtitle}</div>
                         <div className="muted small">Link: {b.testId ? `Test ${b.testId}` : (b.packageSlug || '—')}</div>
+                        <div className="muted small" style={{fontSize:'11px', marginTop:4, wordBreak:'break-all'}}>Image: {b.imageUrl || '—'}</div>
                       </div>
-                      <div>
+                      <div style={{whiteSpace:'nowrap', marginLeft:8}}>
                         <button className="btn outline" onClick={()=>startEditBanner(b)}>Edit</button>
                         <button className="btn pill danger" style={{marginLeft:8}} onClick={()=>deactivateBanner(b.id)}>Deactivate</button>
                       </div>
