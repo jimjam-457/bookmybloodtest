@@ -48,7 +48,7 @@ app.use(authMiddleware);
 
 // Health
 try {
-  const { query } = require('./db');
+  const { query, initDb } = require('./db');
   app.get('/api/health', async (req, res) => {
     try {
       await query('SELECT 1');

@@ -65,7 +65,10 @@ export default function HealthPackages() {
                     src={getImageUrl(pkg.imageUrl)} 
                     alt={pkg.title}
                     style={{width:'100%', height:'150px', objectFit:'cover'}}
-                    onError={(e) => console.log('Image error:', pkg.imageUrl)}
+                    onError={(e) => {
+                      e.target.onerror = null; 
+                      e.target.src = 'https://via.placeholder.com/400x200?text=No+Image';
+                    }}
                   />
                 </div>
               )}

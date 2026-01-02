@@ -765,7 +765,12 @@ export default function Admin() {
                   return (
                     <div key={pkg.id} className="card">
                       <div style={{marginBottom:8}}>
-                        {imageUrl && <img src={imageUrl} alt={pkg.title} style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} onError={(e) => console.error('Package image error:', imageUrl, e)} />}
+                        {imageUrl && <img 
+                          src={getFullImageUrl(imageUrl)} 
+                          alt={pkg.title} 
+                          style={{maxWidth:'100%', maxHeight:100, borderRadius:4}} 
+                          onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/400x200?text=No+Image'; }} 
+                        />}
                       </div>
                       <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                         <div style={{flex:1}}>
