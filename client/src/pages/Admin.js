@@ -7,6 +7,13 @@ export default function Admin() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [tests, setTests] = useState([]);
+
+  const getFullImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    return getApiRoot() + path;
+  };
+
   const [newTest, setNewTest] = useState({ name:'', description:'', price:0, fasting:false, sample:'Blood', category:'' });
   const [view, setView] = useState('bookings'); // 'bookings' | 'tests' | 'banners' | 'health-packages'
   const [banners, setBanners] = useState([]);
